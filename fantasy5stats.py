@@ -54,8 +54,8 @@ def main():
     # Sort histogram
     if args.ascending == True or args.descending == True:
         sorted_hist = sorted(histogram.items(), key=lambda x: x[1])
-        if args.ascending == False:
-            sorted_hist.reverse() # Ascending order
+        if args.descending == True:
+            sorted_hist.reverse() # Descending order
     else:
         sorted_hist = histogram.items()
 

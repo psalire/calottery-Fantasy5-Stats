@@ -50,7 +50,7 @@ def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, current_
 def main():
     args = get_args()
     
-    print("----------\nFantasy 5\n----------")
+    print("-----------------\n{:^17}\n-----------------".format("Fantasy 5"))
 
     # Get txt file
     lotto_file = get_file()

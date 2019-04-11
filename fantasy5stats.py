@@ -7,7 +7,7 @@ def get_args():
     parser.add_argument('-a', '--ascending', action='store_true', default=False, help='Print stats in ascending order by frequency.')
     parser.add_argument('-d', '--descending', action='store_true', default=False, help='Print stats in descending order by frequency.')
     parser.add_argument('--nosave', action='store_true', default=False, help='Don\'t save a raw numbers file.')
-    parser.add_argument('--filename', nargs=1, default='raw_numbers.txt', help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
+    parser.add_argument('--filename', nargs=1, default=['raw_numbers.txt'], help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
     return parser.parse_args()
 
 def get_file():

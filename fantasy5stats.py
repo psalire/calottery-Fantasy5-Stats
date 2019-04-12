@@ -30,18 +30,19 @@ def build_histogram_and_write_to_file(lines, out_file):
             if out_file is not None:
                 out_file.write(word)
                 if i < 4:
-                    out_file.write(' ')
+                    out_file.write(',')
                 else:
                     out_file.write('\r\n')
     return histogram
 
 def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, current_numbers):
+    print("Number: Count (% of total)")
     for val in histogram_items:
-        print("{:>2}: {} ({:.3f}%)".format(val[0], val[1], (val[1] / tot)*100))
+        print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot)*100))
     print("")
     print("Total Numbers : {}".format(tot))
-    print("Max Frequency : {:>2}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
-    print("Min. Frequency: {:>2}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))
+    print("Max Count : {:>2}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
+    print("Min. Count: {:>2}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))
     print("Current Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot)*100))
@@ -49,13 +50,13 @@ def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, current_
 #### MAIN ####
 def main():
     args = get_args()
-    
-    print("-----------------\n{:^17}\n-----------------".format("Fantasy 5"))
+
+    print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5"))
 
     # Get txt file
     lotto_file = get_file()
     lines = lotto_file.split('\n')
-    
+
     # Extract numbers from txt file to build histogram & save raw_numbers file
     raw_numbers = None
     if args.nosave == False:

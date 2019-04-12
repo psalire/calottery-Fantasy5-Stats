@@ -43,7 +43,7 @@ def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, current_
     print("Total Numbers : {}".format(tot))
     print("Max Count : {:>2}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
     print("Min. Count: {:>2}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))
-    print("Current Winning Numbers: {}".format(" ".join(current_numbers)))
+    print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot)*100))
 

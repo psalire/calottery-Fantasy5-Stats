@@ -35,14 +35,16 @@ def build_histogram_and_write_to_file(lines, out_file):
                     out_file.write('\r\n')
     return histogram
 
-def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, current_numbers):
+def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, med_val, current_numbers):
     print("Number: Count (% of total)")
     for val in histogram_items:
         print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot)*100))
     print("")
-    print("Total Numbers : {}".format(tot))
-    print("Max Count : {:>2}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
-    print("Min. Count: {:>2}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))
+    print("Total Count: {}".format(tot))
+    print("Mean  Count: {:^.3f}".format(tot / 39))
+    print("Med.  Count: {:^.3f} ({:.3f}%)".format(med_val, (med_val / tot)*100))
+    print("Max   Count: {:^8}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
+    print("Min.  Count: {:^8}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot)*100))
@@ -65,10 +67,12 @@ def main():
     if args.nosave == False:
         raw_numbers.close()
 
-    # Sort histogram
+    # Sort histogram, ascending
     hist_ascend = sorted(histogram.items(), key=lambda x: x[1])
+    # Get max, min, median
     min_val = hist_ascend[0]
     max_val = hist_ascend[-1]
+    median_val = (hist_ascend[19][1] + hist_ascend[20][1]) / 2
     if args.ascending == True or args.descending == True:
         sorted_hist = hist_ascend
         if args.descending == True:
@@ -81,7 +85,7 @@ def main():
     for val in sorted_hist:
         tot += val[1]
 
-    print_stats(sorted_hist, histogram, tot, max_val, min_val, re.findall(r'\d+', lines[5])[3:])
+    print_stats(sorted_hist, histogram, tot, max_val, min_val, median_val, re.findall(r'\d+', lines[5])[3:])
 
 if __name__ == "__main__":
     main()

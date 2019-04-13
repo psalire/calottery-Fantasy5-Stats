@@ -41,7 +41,7 @@ def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, med_val,
         print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot)*100))
     print("")
     print("Total Count: {}".format(tot))
-    print("Mean  Count: {:^.3f}".format(tot / 39))
+    print("Mean  Count: {:^.3f} ({:.3f}%)".format(tot / 39, (1 / 39)*100))
     print("Med.  Count: {:^.3f} ({:.3f}%)".format(med_val, (med_val / tot)*100))
     print("Max   Count: {:^8}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
     print("Min.  Count: {:^8}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))

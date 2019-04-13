@@ -86,12 +86,10 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Numbers Daily Sum Rounded Mean Stdev.: {:.3f}\n".format(stdev(line_sums_rounded_means)))
 
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
-    num_sum = 0
-    cnt_sum = 0
     for num in current_numbers:
-        num_sum += int(num)
-        cnt_sum += histogram_dict[num]
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
+    num_sum = sum([*map(int, current_numbers)])
+    cnt_sum = sum([*map(lambda x: histogram_dict[x], current_numbers)])
     print("\nLast Winning Numbers Daily Sum: {}".format(num_sum))
     print("Last Winning Numbers Daily Mean : {:.3f}".format(num_sum / 5))
 

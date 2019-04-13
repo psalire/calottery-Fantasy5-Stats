@@ -4,6 +4,8 @@ Parses calottery's .txt file of Fantasy5 results. Prints stats on each number. A
 
 todo: more stats, matlab plots
 
+```Python 3.6.8```
+
 ## Options
 ```python3 fantasy5stats.py --help```
 

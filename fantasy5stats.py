@@ -26,6 +26,7 @@ def build_histogram_and_write_to_file(lines, out_file):
     histogram["sum"] = 0
     line_sums = []
     line_means = []
+    line_stdevs = []
 
     for line in lines:
         numbers = re.findall(r'\d+', line)[3:]
@@ -36,6 +37,7 @@ def build_histogram_and_write_to_file(lines, out_file):
         histogram["sum"] += line_sum
         line_sums.append(line_sum)
         line_means.append(mean(numbers_int))
+        line_stdevs.append(stdev(numbers_int))
         for i, word in enumerate(numbers):
             histogram[word] += 1
             if out_file is not None:
@@ -46,9 +48,10 @@ def build_histogram_and_write_to_file(lines, out_file):
                     out_file.write('\r\n')
     histogram["line_sums"] = sorted(line_sums)
     histogram["line_means"] = sorted(line_means)
+    histogram["line_stdevs"] = sorted(line_stdevs)
     return histogram
 
-def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, daily_sums, daily_means, current_numbers):
+def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, daily_sums, daily_means, daily_stdevs, current_numbers):
     min_val = ascend_hist[0]
     max_val = ascend_hist[-1]
     med_val = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
@@ -72,7 +75,13 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Numbers Daily Mean Mean  : {:.3f}".format(mean(daily_means)))
     print("Numbers Daily Mean Median: {:.3f}".format(median(daily_means)))
     print("Numbers Daily Mean Mode  : {:.3f}".format(mode(daily_means)))
-    print("Numbers Daily Mean Stdev.: {:.3f}\n".format(stdev(daily_means)))
+    print("Numbers Daily Mean Stdev.: {:.3f}\n".format(mean(daily_means)))
+    print("Numbers Daily Stdev. Max         : {:.3f}".format(daily_stdevs[-1]))
+    print("Numbers Daily Stdev. Min.        : {:.3f}".format(daily_stdevs[0]))
+    print("Numbers Daily Stdev. Mean        : {:.3f}".format(mean(daily_stdevs)))
+    print("Numbers Daily Stdev. Mode        : {:.3f}".format(mode(daily_stdevs)))
+    print("Numbers Daily Stdev. Rounded Mode: {:.3f}".format(mode([*map(round, daily_stdevs)])))
+    print("Numbers Daily Stdev. Stdev.      : {:.3f}\n".format(stdev(daily_stdevs)))
     print("Numbers Daily Sum Max                : {}".format(daily_sums[-1]))
     print("Numbers Daily Sum Min.               : {}".format(daily_sums[0]))
     print("Numbers Daily Sum Median             : {:.3f}".format(median(daily_sums)))
@@ -89,10 +98,12 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
-    num_sum = sum([*map(int, current_numbers)])
+    current_numbers_int = [*map(int, current_numbers)]
+    num_sum = sum(current_numbers_int)
     cnt_sum = sum([*map(lambda x: histogram_dict[x], current_numbers)])
-    print("\nLast Winning Numbers Daily Sum: {}".format(num_sum))
-    print("Last Winning Numbers Daily Mean : {:.3f}".format(num_sum / 5))
+    print("\nLast Winning Numbers Day Sum : {}".format(num_sum))
+    print("Last Winning Numbers Day Mean  : {:.3f}".format(num_sum / 5))
+    print("Last Winning Numbers Day Stdev.: {:.3f}".format(stdev(current_numbers_int)))
 
 #### MAIN ####
 def main():
@@ -115,6 +126,7 @@ def main():
     sum = histogram.pop("sum", None)
     line_sums = histogram.pop("line_sums", None)
     line_means = histogram.pop("line_means", None)
+    line_stdevs = histogram.pop("line_stdevs", None)
     # Sort histogram, ascending
     hist_ascend = sorted(histogram.items(), key=lambda x: x[1])
     if args.ascending == True or args.descending == True:
@@ -129,7 +141,7 @@ def main():
     for val in sorted_hist:
         tot += val[1]
 
-    print_stats(sorted_hist, histogram, hist_ascend, tot, sum, line_sums, line_means, re.findall(r'\d+', lines[5])[3:])
+    print_stats(sorted_hist, histogram, hist_ascend, tot, sum, line_sums, line_means, line_stdevs, re.findall(r'\d+', lines[5])[3:])
 
 if __name__ == "__main__":
     main()

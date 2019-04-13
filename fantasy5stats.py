@@ -79,6 +79,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Numbers Daily Stdev. Max           : {:.3f}".format(daily_stdevs[-1]))
     print("Numbers Daily Stdev. Min.          : {:.3f}".format(daily_stdevs[0]))
     print("Numbers Daily Stdev. Mean          : {:.3f}".format(mean(daily_stdevs)))
+    print("Numbers Daily Stdev. Median        : {:.3f}".format(median(daily_stdevs)))
     print("Numbers Daily Stdev. Mode          : {:.3f}".format(mode(daily_stdevs)))
     daily_stdevs_rounded = [*map(round, daily_stdevs)]
     print("Numbers Daily Stdev. Rounded Mode  : {:.3f}".format(mode(daily_stdevs_rounded)))
@@ -103,7 +104,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     current_numbers_int = [*map(int, current_numbers)]
     num_sum = sum(current_numbers_int)
     cnt_sum = sum([*map(lambda x: histogram_dict[x], current_numbers)])
-    print("\nLast Winning Numbers Day Sum : {}".format(num_sum))
+    print("\nLast Winning Numbers Day Sum   : {}".format(num_sum))
     print("Last Winning Numbers Day Mean  : {:.3f}".format(num_sum / 5))
     print("Last Winning Numbers Day Stdev.: {:.3f}".format(stdev(current_numbers_int)))
 

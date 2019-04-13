@@ -1,6 +1,7 @@
 import re
 import requests
 import argparse
+from statistics import mode, median, mean, stdev
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -22,32 +23,65 @@ def build_histogram_and_write_to_file(lines, out_file):
     histogram = {}
     for i in range(39):
         histogram[str(i + 1)] = 0
+    histogram["sum"] = 0
+    line_sums = []
 
     for line in lines:
         numbers = re.findall(r'\d+', line)
+        line_sum = sum(map(int, numbers[3:]))
+        histogram["sum"] += line_sum
+        line_sums.append(line_sum)
         for i, word in enumerate(numbers[3:]):
             histogram[word] += 1
+            int_num = int(word)
             if out_file is not None:
                 out_file.write(word)
                 if i < 4:
                     out_file.write(',')
                 else:
                     out_file.write('\r\n')
+    line_sums[:] = [x for x in line_sums if x > 0]
+    histogram["line_sums"] = sorted(line_sums)
     return histogram
 
-def print_stats(histogram_items, histogram_dict, tot, max_val, min_val, med_val, current_numbers):
+def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, line_sums, current_numbers):
+    min_val = ascend_hist[0]
+    max_val = ascend_hist[-1]
+    med_val = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
     print("Number: Count (% of total)")
     for val in histogram_items:
-        print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot)*100))
+        print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot_cnt)*100))
     print("")
-    print("Total Count: {}".format(tot))
-    print("Mean  Count: {:^.3f} ({:.3f}%)".format(tot / 39, (1 / 39)*100))
-    print("Med.  Count: {:^.3f} ({:.3f}%)".format(med_val, (med_val / tot)*100))
-    print("Max   Count: {:^8}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot)*100))
-    print("Min.  Count: {:^8}: {} ({:.3f}%)\n".format(min_val[0], min_val[1], (min_val[1] / tot)*100))
+    print("Total Number Count: {}\n".format(tot_cnt))
+    print("Count Max   : #{:<7}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot_cnt)*100))
+    print("Count Min.  : #{:<7}: {} ({:.3f}%)".format(min_val[0], min_val[1], (min_val[1] / tot_cnt)*100))
+    print("Count Mean  : {:.3f} ({:.3f}%)".format(tot_cnt / 39, (1 / 39)*100))
+    print("Count Median: {:.3f} ({:.3f}%)".format(med_val, (med_val / tot_cnt)*100))
+    print("Count Mode  : {}".format(mode(histogram_dict.values())))
+    print("Count Stdev.: {:.3f}\n".format(stdev(histogram_dict.values())))
+    print("Numbers Total Sum     : {}".format(tot_sum))
+    print("Numbers Total Sum Mean: {:.3f}\n".format(tot_sum / tot_cnt))
+    print("Numbers Daily Sum Max                : {}".format(line_sums[-1]))
+    print("Numbers Daily Sum Min.               : {}".format(line_sums[0]))
+    line_sums_len = len(line_sums)
+    print("Numbers Daily Sum Median             : {:.3f}".format(median(line_sums)))
+    print("Numbers Daily Sum Mean               : {:.3f}".format(mean(line_sums)))
+    print("Numbers Daily Sum Mode               : {}".format(mode(line_sums)))
+    print("Numbers Daily Sum Stdev.             : {:.3f}".format(stdev(line_sums)))
+    print("Numbers Daily Sum Mean Mode          : {}".format(mode(map(lambda x: (x/5), line_sums))))
+    print("Numbers Daily Sum Rounded Mean Mode  : {}".format(mode(map(lambda x: round(x/5), line_sums))))
+    print("Numbers Daily Sum Mean Stdev.        : {:.3f}".format(stdev(map(lambda x: (x/5), line_sums))))
+    print("Numbers Daily Sum Rounded Mean Stdev.: {:.3f}\n".format(stdev(map(lambda x: round(x/5), line_sums))))
+
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
+    num_sum = 0
+    cnt_sum = 0
     for num in current_numbers:
-        print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot)*100))
+        num_sum += int(num)
+        cnt_sum += histogram_dict[num]
+        print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
+    print("\nLast Winning Numbers Daily Sum     : {}".format(num_sum))
+    print("Last Winning Numbers Daily Sum Mean: {:.3f}".format(num_sum / 5))
 
 #### MAIN ####
 def main():
@@ -67,12 +101,10 @@ def main():
     if args.nosave == False:
         raw_numbers.close()
 
+    sum = histogram.pop("sum", None)
+    line_sums = histogram.pop("line_sums", None)
     # Sort histogram, ascending
     hist_ascend = sorted(histogram.items(), key=lambda x: x[1])
-    # Get max, min, median
-    min_val = hist_ascend[0]
-    max_val = hist_ascend[-1]
-    median_val = (hist_ascend[19][1] + hist_ascend[20][1]) / 2
     if args.ascending == True or args.descending == True:
         sorted_hist = hist_ascend
         if args.descending == True:
@@ -85,7 +117,7 @@ def main():
     for val in sorted_hist:
         tot += val[1]
 
-    print_stats(sorted_hist, histogram, tot, max_val, min_val, median_val, re.findall(r'\d+', lines[5])[3:])
+    print_stats(sorted_hist, histogram, hist_ascend, tot, sum, line_sums, re.findall(r'\d+', lines[5])[3:])
 
 if __name__ == "__main__":
     main()

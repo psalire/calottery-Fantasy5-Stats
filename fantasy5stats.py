@@ -7,8 +7,8 @@ from statistics import mode, median, mean, pstdev
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-a', '--ascending', action='store_true', default=False, help='Print stats in ascending order by frequency.')
-    parser.add_argument('-d', '--descending', action='store_true', default=False, help='Print stats in descending order by frequency.')
+    parser.add_argument('-a', '--ascending', action='store_true', default=False, help='Print and plot stats in ascending order by frequency.')
+    parser.add_argument('-d', '--descending', action='store_true', default=False, help='Print and plot stats in descending order by frequency.')
     parser.add_argument('--nosave', action='store_true', default=False, help='Don\'t save a raw numbers file.')
     parser.add_argument('--filename', nargs=1, default=['raw_numbers.txt'], help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
     return parser.parse_args()
@@ -109,18 +109,23 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("\nLast Winning Numbers Day Sum   : {}".format(num_sum))
     print("Last Winning Numbers Day Mean  : {:.3f}".format(num_sum / 5))
     print("Last Winning Numbers Day Stdev.: {:.3f}".format(pstdev(current_numbers_int)))
+    plt.figure(0)
+    histogram_lists = [*map(list, zip(*histogram_items))]
+    # print(histogram_lists)
+    plt.bar(histogram_lists[0], histogram_lists[1], width=0.7)
+    plt.title("Winning Numbers")
     plt.figure(1)
-    plt.hist(daily_stdevs, edgecolor='black', bins=40)
+    plt.hist(daily_stdevs, edgecolor='black', bins=50)
     plt.title("Winning Numbers Stdev. (Population)")
     plt.ylabel("Total");
     plt.xlabel("Stdev.");
     plt.figure(2)
-    plt.hist(daily_means, edgecolor='black', bins=40)
+    plt.hist(daily_means, edgecolor='black', bins=50)
     plt.title("Winning Numbers Means")
     plt.ylabel("Total");
     plt.xlabel("Mean");
     plt.figure(3)
-    plt.hist(daily_sums, edgecolor='black', bins=40)
+    plt.hist(daily_sums, edgecolor='black', bins=50)
     plt.title("Winning Numbers Sums")
     plt.ylabel("Total");
     plt.xlabel("Sum");

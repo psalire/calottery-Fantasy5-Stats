@@ -1,7 +1,7 @@
 import re
 import requests
 import argparse
-from statistics import mode, median, mean, stdev
+from statistics import mode, median, mean, pstdev
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -37,7 +37,7 @@ def build_histogram_and_write_to_file(lines, out_file):
         histogram["sum"] += line_sum
         line_sums.append(line_sum)
         line_means.append(mean(numbers_int))
-        line_stdevs.append(stdev(numbers_int))
+        line_stdevs.append(pstdev(numbers_int))
         for i, word in enumerate(numbers):
             histogram[word] += 1
             if out_file is not None:
@@ -66,7 +66,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Count Median: {:.3f} ({:.3f}%)".format(med_val, (med_val / tot_cnt)*100))
     cnt_mode = mode(histogram_dict.values())
     print("Count Mode  : {}     ({:.3f}%)".format(cnt_mode, (cnt_mode / tot_cnt)*100))
-    cnt_stdev = stdev(histogram_dict.values())
+    cnt_stdev = pstdev(histogram_dict.values())
     print("Count Stdev.: {:.3f}   ({:.3f}%)\n".format(cnt_stdev, (cnt_stdev / tot_cnt)*100))
     print("Numbers Total Sum     : {}".format(tot_sum))
     print("Numbers Total Sum Mean: {:.3f}\n".format(tot_sum / tot_cnt))
@@ -75,7 +75,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Numbers Daily Mean Mean  : {:.3f}".format(mean(daily_means)))
     print("Numbers Daily Mean Median: {:.3f}".format(median(daily_means)))
     print("Numbers Daily Mean Mode  : {:.3f}".format(mode(daily_means)))
-    print("Numbers Daily Mean Stdev.: {:.3f}\n".format(mean(daily_means)))
+    print("Numbers Daily Mean Stdev.: {:.3f}\n".format(pstdev(daily_means)))
     print("Numbers Daily Stdev. Max           : {:.3f}".format(daily_stdevs[-1]))
     print("Numbers Daily Stdev. Min.          : {:.3f}".format(daily_stdevs[0]))
     print("Numbers Daily Stdev. Mean          : {:.3f}".format(mean(daily_stdevs)))
@@ -83,20 +83,20 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Numbers Daily Stdev. Mode          : {:.3f}".format(mode(daily_stdevs)))
     daily_stdevs_rounded = [*map(round, daily_stdevs)]
     print("Numbers Daily Stdev. Rounded Mode  : {:.3f}".format(mode(daily_stdevs_rounded)))
-    print("Numbers Daily Stdev. Stdev.        : {:.3f}".format(stdev(daily_stdevs)))
-    print("Numbers Daily Stdev. Rounded Stdev.: {:.3f}\n".format(stdev(daily_stdevs_rounded)))
+    print("Numbers Daily Stdev. Stdev.        : {:.3f}".format(pstdev(daily_stdevs)))
+    print("Numbers Daily Stdev. Rounded Stdev.: {:.3f}\n".format(pstdev(daily_stdevs_rounded)))
     print("Numbers Daily Sum Max                : {}".format(daily_sums[-1]))
     print("Numbers Daily Sum Min.               : {}".format(daily_sums[0]))
     print("Numbers Daily Sum Median             : {:.3f}".format(median(daily_sums)))
     print("Numbers Daily Sum Mean               : {:.3f}".format(mean(daily_sums)))
     print("Numbers Daily Sum Mode               : {}".format(mode(daily_sums)))
-    print("Numbers Daily Sum Stdev.             : {:.3f}".format(stdev(daily_sums)))
+    print("Numbers Daily Sum Stdev.             : {:.3f}".format(pstdev(daily_sums)))
     line_sums_means = [*map(lambda x: (x/5), daily_sums)]
     line_sums_rounded_means = [*map(round, line_sums_means)]
     print("Numbers Daily Sum Mean Mode          : {}".format(mode(line_sums_means)))
     print("Numbers Daily Sum Rounded Mean Mode  : {}".format(mode(line_sums_rounded_means)))
-    print("Numbers Daily Sum Mean Stdev.        : {:.3f}".format(stdev(line_sums_means)))
-    print("Numbers Daily Sum Rounded Mean Stdev.: {:.3f}\n".format(stdev(line_sums_rounded_means)))
+    print("Numbers Daily Sum Mean Stdev.        : {:.3f}".format(pstdev(line_sums_means)))
+    print("Numbers Daily Sum Rounded Mean Stdev.: {:.3f}\n".format(pstdev(line_sums_rounded_means)))
 
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
@@ -106,7 +106,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     cnt_sum = sum([*map(lambda x: histogram_dict[x], current_numbers)])
     print("\nLast Winning Numbers Day Sum   : {}".format(num_sum))
     print("Last Winning Numbers Day Mean  : {:.3f}".format(num_sum / 5))
-    print("Last Winning Numbers Day Stdev.: {:.3f}".format(stdev(current_numbers_int)))
+    print("Last Winning Numbers Day Stdev.: {:.3f}".format(pstdev(current_numbers_int)))
 
 #### MAIN ####
 def main():

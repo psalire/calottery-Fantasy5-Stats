@@ -9,3 +9,10 @@ todo: more stats, matlab plots
 ## Options
 ```python3 fantasy5stats.py --help```
 
+## Example Output (2019/04/13)
+
+![Standard Deviations](stdevs.png "Standard Deviations")
+
+![Means](means.png "Means")
+
+

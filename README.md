@@ -11,7 +11,7 @@ todo: more stats, matlab plots
 
 ## Example Output (2019/04/13)
 
-![Standard Deviations](stdevs.png "Standard Deviations"i)
+![Standard Deviations](stdevs.png "Standard Deviations")
 
 ![Means](means.png "Means")
 

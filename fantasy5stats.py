@@ -112,17 +112,17 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     plt.figure(0)
     histogram_lists = [*map(list, zip(*histogram_items))]
     plt.bar(histogram_lists[0], histogram_lists[1], width=0.7)
-    plt.title("Winning Numbers")
+    plt.title("All Winning Numbers")
     plt.figure(1)
     plt.hist(daily_stdevs, edgecolor='black', bins=50)
-    plt.title("Winning Numbers Stdev. (Population)")
-    plt.ylabel("Total");
-    plt.xlabel("Stdev.");
+    plt.title("Daily Winning Numbers Stdev. (Population)")
+    plt.ylabel("Total")
+    plt.xlabel("Stdev.")
     plt.figure(2)
     plt.hist(daily_means, edgecolor='black', bins=50)
-    plt.title("Winning Numbers Means")
-    plt.ylabel("Total");
-    plt.xlabel("Mean");
+    plt.title("Daily Winning Numbers Means")
+    plt.ylabel("Total")
+    plt.xlabel("Mean")
     plt.show()
 
 #### MAIN ####

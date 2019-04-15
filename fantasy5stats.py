@@ -226,7 +226,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
         stdev_line = pstdev(line)
         mean_line = mean(line)
         mean_freq_line = mean([*map(lambda x: histogram_dict[x], [*map(str, line)])])
-        stdev_freq_line = pstdev(line)
+        stdev_freq_line = pstdev([*map(lambda x: histogram_dict[x], [*map(str, line)])])
         t_1 = False
         t_2 = False
         t_3 = False

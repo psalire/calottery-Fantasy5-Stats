@@ -1,12 +1,14 @@
 import re
 import requests
 import argparse
+import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from statistics import mode, median, mean, pstdev
 
 ORDER = "Numerical Order"
 NUM_BINS = 50
+CURRENT_DATE = str(datetime.datetime.now().strftime("%Y/%m/%d"))
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -132,7 +134,8 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     plt.figure(0)
     plt.bar(histogram_lists[0], histogram_lists[1], width=0.75, edgecolor='black', linewidth=0.9)
     plt.axhline(cnt_mean, label="Mean: {:.3f}".format(cnt_mean), linestyle="--", color="red")
-    plt.title("All Winning Numbers Counts ({})".format(ORDER))
+    plt.title(CURRENT_DATE+": ["+",".join(current_numbers)+"]")
+    plt.suptitle("All Winning Numbers Counts ({})".format(ORDER))
     plt.legend(loc=0, fontsize="small")
     plt.xlabel("Number")
     plt.ylabel("Total")
@@ -141,6 +144,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     figure_1, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
     figure_1.suptitle("Daily Winning Numbers Stdevs. (bins={})".format(NUM_BINS))
     figure_1.subplots_adjust(hspace=0)
+    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
     plots[0].boxplot(daily_stdevs, vert=False)
     plots[1].hist(daily_stdevs, edgecolor='black', bins=NUM_BINS)
     plots[1].set_ylabel("Total")
@@ -160,6 +164,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     figure_2, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
     figure_2.suptitle("Daily Winning Numbers Means (bins={})".format(NUM_BINS))
     figure_2.subplots_adjust(hspace=0)
+    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
     plots[0].boxplot(daily_means, vert=False)
     plots[1].hist(daily_means, edgecolor='black', bins=NUM_BINS)
     plots[1].set_ylabel("Total")
@@ -183,7 +188,7 @@ def main():
     args = get_args()
     NUM_BINS = int(args.bins[0])
 
-    print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5"))
+    print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5 | " + CURRENT_DATE))
 
     # Get txt file
     lotto_file = get_file()

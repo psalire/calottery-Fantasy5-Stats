@@ -70,6 +70,16 @@ def build_histogram_and_write_to_file(lines, out_file):
     histogram["line_count_stdevs"] = sorted(line_count_stdevs)
     return histogram
 
+def print_stats_list(label, list, mean_list, mode_list_rounded, stdev_list, list_rounded):
+    print("{:<36}: {:.3f}".format(label+" Max", list[-1]))
+    print("{:<36}: {:.3f}".format(label+" Min.", list[0]))
+    print("{:<36}: {:.3f}".format(label+" Mean", mean_list))
+    print("{:<36}: {:.3f}".format(label+" Median", median(list)))
+    print("{:<36}: {:.3f}".format(label+" Mode", mode(list)))
+    print("{:<36}: {:.3f}".format(label+" Rounded Mode", mode_list_rounded))
+    print("{:<36}: {:.3f}".format(label+" Stdev.", stdev_list))
+    print("{:<36}: {:.3f}\n".format(label+" Rounded Stdev.", pstdev(list_rounded)))
+    
 def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
                 daily_sums, daily_means, daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers):
     cnt_min = ascend_hist[0]
@@ -95,65 +105,37 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     mean_daily_means = mean(daily_means)
     stdev_daily_means = pstdev(daily_means)
     daily_means_rounded = [*map(lambda x: round(x, 1), daily_means)]
-    print("Numbers Daily Mean Max   : {:.3f}".format(daily_means[-1]))
-    print("Numbers Daily Mean Min.  : {:.3f}".format(daily_means[0]))
-    print("Numbers Daily Mean Mean  : {:.3f}".format(mean_daily_means))
-    print("Numbers Daily Mean Median: {:.3f}".format(median(daily_means)))
-    print("Numbers Daily Mean Mode  : {:.3f}".format(mode(daily_means)))
-    print("Numbers Daily Mean Rounded Mode  : {:.3f}".format(mode(daily_means_rounded)))
-    print("Numbers Daily Mean Stdev.: {:.3f}".format(stdev_daily_means))
-    print("Numbers Daily Mean Rounded Stdev.: {:.3f}\n".format(pstdev(daily_means_rounded)))
+    mode_daily_means_rounded = mode(daily_means_rounded)
+    print_stats_list("Numbers Daily Mean", daily_means, mean_daily_means, 
+                      mode_daily_means_rounded, stdev_daily_means, daily_means_rounded)
 
     mean_daily_stdevs = mean(daily_stdevs)
     stdev_daily_stdevs = pstdev(daily_stdevs)
     daily_stdevs_rounded = [*map(lambda x: round(x, 1), daily_stdevs)]
-    print("Numbers Daily Stdev. Max           : {:.3f}".format(daily_stdevs[-1]))
-    print("Numbers Daily Stdev. Min.          : {:.3f}".format(daily_stdevs[0]))
-    print("Numbers Daily Stdev. Mean          : {:.3f}".format(mean_daily_stdevs))
-    print("Numbers Daily Stdev. Median        : {:.3f}".format(median(daily_stdevs)))
-    print("Numbers Daily Stdev. Mode          : {:.3f}".format(mode(daily_stdevs)))
-    print("Numbers Daily Stdev. Rounded Mode  : {:.3f}".format(mode(daily_stdevs_rounded)))
-    print("Numbers Daily Stdev. Stdev.        : {:.3f}".format(stdev_daily_stdevs))
-    print("Numbers Daily Stdev. Rounded Stdev.: {:.3f}\n".format(pstdev(daily_stdevs_rounded)))
+    mode_daily_stdevs_rounded = mode(daily_stdevs_rounded)
+    print_stats_list("Numbers Daily Stdev.", daily_stdevs, mean_daily_stdevs, 
+                      mode_daily_stdevs_rounded, stdev_daily_stdevs, daily_stdevs_rounded)
 
     daily_sums_means = [*map(lambda x: (x/5), daily_sums)]
     daily_sums_rounded_means = [*map(lambda x: round(x, 1), daily_sums_means)]
-    print("Numbers Daily Sum Max                : {}".format(daily_sums[-1]))
-    print("Numbers Daily Sum Min.               : {}".format(daily_sums[0]))
-    print("Numbers Daily Sum Median             : {:.3f}".format(median(daily_sums)))
-    print("Numbers Daily Sum Mean               : {:.3f}".format(mean(daily_sums)))
-    print("Numbers Daily Sum Mode               : {}".format(mode(daily_sums)))
-    print("Numbers Daily Sum Stdev.             : {:.3f}".format(pstdev(daily_sums)))
-    print("Numbers Daily Sum Mean Mode          : {}".format(mode(daily_sums_means)))
-    print("Numbers Daily Sum Rounded Mean Mode  : {}".format(mode(daily_sums_rounded_means)))
-    print("Numbers Daily Sum Mean Stdev.        : {:.3f}".format(pstdev(daily_sums_means)))
-    print("Numbers Daily Sum Rounded Mean Stdev.: {:.3f}\n".format(pstdev(daily_sums_rounded_means)))
+    print_stats_list("Numbers Daily Sum", daily_sums, mean(daily_sums), 
+                      mode(daily_sums_rounded_means), pstdev(daily_sums_means), daily_sums_rounded_means)
     
     mean_daily_cnt_mean = mean(daily_count_means)
     stdev_daily_cnt_mean = pstdev(daily_count_means)
     median_daily_cnt_mean = median(daily_count_means)
     daily_count_means_rounded = [*map(lambda x: round(x, 1), daily_count_means)]
     mode_daily_cnt_mean_rounded = mode(daily_count_means_rounded)
-    print("Numbers Daily Count Mean Max          : {:.3f}".format(daily_count_means[-1]))
-    print("Numbers Daily Count Mean Min.         : {:.3f}".format(daily_count_means[0]))
-    print("Numbers Daily Count Mean Med.         : {:.3f}".format(median_daily_cnt_mean))
-    print("Numbers Daily Count Mean Mean         : {:.3f}".format(mean_daily_cnt_mean))
-    print("Numbers Daily Count Mean Rounded Mode : {:.3f}".format(mode_daily_cnt_mean_rounded))
-    print("Numbers Daily Count Mean Stdev.       : {:.3f}".format(stdev_daily_cnt_mean))
-    print("Numbers Daily Count Mean Rounded Stdev.: {:.3f}\n".format(pstdev(daily_count_means_rounded)))
+    print_stats_list("Numbers Count Mean", daily_count_means, mean_daily_cnt_mean, 
+                      mode_daily_cnt_mean_rounded, stdev_daily_cnt_mean, daily_count_means_rounded)
     
     mean_daily_cnt_stdev = mean(daily_count_stdevs)
     stdev_daily_cnt_stdev = pstdev(daily_count_stdevs)
     median_daily_cnt_stdev = median(daily_count_stdevs)
     daily_count_stdevs_rounded = [*map(lambda x: round(x, 1), daily_count_stdevs)]
     mode_daily_cnt_stdev_rounded = mode(daily_count_stdevs_rounded)
-    print("Numbers Daily Count Stdev Max          : {:.3f}".format(daily_count_stdevs[-1]))
-    print("Numbers Daily Count Stdev Min.         : {:.3f}".format(daily_count_stdevs[0]))
-    print("Numbers Daily Count Stdev Med.         : {:.3f}".format(median_daily_cnt_stdev))
-    print("Numbers Daily Count Stdev Mean         : {:.3f}".format(mean_daily_cnt_stdev))
-    print("Numbers Daily Count Stdev Rounded Mode : {:.3f}".format(mode_daily_cnt_stdev_rounded))
-    print("Numbers Daily Count Stdev Stdev.       : {:.3f}".format(stdev_daily_cnt_stdev))
-    print("Numbers Daily Count Stdev Rounded Stdev.: {:.3f}\n".format(pstdev(daily_count_stdevs_rounded)))
+    print_stats_list("Numbers Count Stdev.", daily_count_stdevs, mean_daily_cnt_stdev, 
+                      mode_daily_cnt_stdev_rounded, stdev_daily_cnt_stdev, daily_count_stdevs_rounded)
 
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
@@ -212,7 +194,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     plots[1].set_ylabel("Total")
     plots[1].set_xlabel("Daily Mean")
     plots[1].axvline(mean_daily_means, label="Mean: {:.3f}".format(mean_daily_means), linestyle="--", color="red", linewidth=0.9)
-    plots[1].axvline(mode(daily_means_rounded), label="Rounded Mode: {}".format(mode(daily_means_rounded)), linestyle="--", color="#FF8C00", linewidth=0.9)
+    plots[1].axvline(mode_daily_means_rounded, label="Rounded Mode: {}".format(mode_daily_means_rounded), linestyle="--", color="#FF8C00", linewidth=0.9)
     plots[1].axvline(median(daily_means), label="Median: {:.3f}".format(median(daily_means)), linestyle="--", color="#00FF00", linewidth=0.9)
     plots[1].axvline(current_num_mean, label="Last Winning Mean: {:.3f}".format(current_num_mean), linestyle="-.", color="#9932CC", linewidth=1)
     for i, mean_stdev in enumerate(stdevs_mean_daily_means):

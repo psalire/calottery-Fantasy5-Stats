@@ -79,7 +79,28 @@ def print_stats_list(label, list, mean_list, mode_list_rounded, stdev_list, list
     print("{:<36}: {:.3f}".format(label+" Rounded Mode", mode_list_rounded))
     print("{:<36}: {:.3f}".format(label+" Stdev.", stdev_list))
     print("{:<36}: {:.3f}\n".format(label+" Rounded Stdev.", pstdev(list_rounded)))
-    
+
+def plot_histogram(title, xlabel, factor, list, mean_list, stdev_list, mode_list_rounded, current_num, current_num_in):
+    stdevs_list = [*map(lambda x: mean_list + x*stdev_list,  [-3,-2,-1,1,2,3])]
+    f, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
+    f.suptitle(title+" (bins={})".format(NUM_BINS))
+    f.subplots_adjust(hspace=0)
+    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_num))+"]")
+    plots[0].boxplot(list, vert=False)
+    plots[1].hist(list, edgecolor='black', bins=NUM_BINS)
+    plots[1].set_ylabel("Total")
+    plots[1].set_xlabel(xlabel)
+    plots[1].axvline(mean_list, label="Mean: {:.3f}".format(mean_list), linestyle="--", color="red", linewidth=0.9)
+    plots[1].axvline(median(list), label="Median: {:.3f}".format(median(list)), linestyle="--", color="#00FF00", linewidth=0.9)
+    plots[1].axvline(mode_list_rounded, label="Rounded Mode: {}".format(mode_list_rounded), linestyle="--", color="#FF8C00", linewidth=0.9)
+    plots[1].axvline(current_num_in, label="Last Winning {}: {:.3f}".format(factor, current_num_in), linestyle="-.", color="#9932CC", linewidth=1)
+    for i, fac in enumerate(stdevs_list):
+        if i == 0:
+            plots[1].axvline(fac, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
+        else:
+            plots[1].axvline(fac, linestyle="-", color="#2F4F4F", linewidth=0.9)
+    plots[1].legend(loc=0, fontsize="small")
+
 def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
                 daily_sums, daily_means, daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers):
     cnt_min = ascend_hist[0]
@@ -106,35 +127,35 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     stdev_daily_means = pstdev(daily_means)
     daily_means_rounded = [*map(lambda x: round(x, 1), daily_means)]
     mode_daily_means_rounded = mode(daily_means_rounded)
-    print_stats_list("Numbers Daily Mean", daily_means, mean_daily_means, 
+    print_stats_list("Numbers Daily Mean", daily_means, mean_daily_means,
                       mode_daily_means_rounded, stdev_daily_means, daily_means_rounded)
 
     mean_daily_stdevs = mean(daily_stdevs)
     stdev_daily_stdevs = pstdev(daily_stdevs)
     daily_stdevs_rounded = [*map(lambda x: round(x, 1), daily_stdevs)]
     mode_daily_stdevs_rounded = mode(daily_stdevs_rounded)
-    print_stats_list("Numbers Daily Stdev.", daily_stdevs, mean_daily_stdevs, 
+    print_stats_list("Numbers Daily Stdev.", daily_stdevs, mean_daily_stdevs,
                       mode_daily_stdevs_rounded, stdev_daily_stdevs, daily_stdevs_rounded)
 
     daily_sums_means = [*map(lambda x: (x/5), daily_sums)]
     daily_sums_rounded_means = [*map(lambda x: round(x, 1), daily_sums_means)]
-    print_stats_list("Numbers Daily Sum", daily_sums, mean(daily_sums), 
+    print_stats_list("Numbers Daily Sum", daily_sums, mean(daily_sums),
                       mode(daily_sums_rounded_means), pstdev(daily_sums_means), daily_sums_rounded_means)
-    
+
     mean_daily_cnt_mean = mean(daily_count_means)
     stdev_daily_cnt_mean = pstdev(daily_count_means)
     median_daily_cnt_mean = median(daily_count_means)
     daily_count_means_rounded = [*map(lambda x: round(x, 1), daily_count_means)]
     mode_daily_cnt_mean_rounded = mode(daily_count_means_rounded)
-    print_stats_list("Numbers Count Mean", daily_count_means, mean_daily_cnt_mean, 
+    print_stats_list("Numbers Count Mean", daily_count_means, mean_daily_cnt_mean,
                       mode_daily_cnt_mean_rounded, stdev_daily_cnt_mean, daily_count_means_rounded)
-    
+
     mean_daily_cnt_stdev = mean(daily_count_stdevs)
     stdev_daily_cnt_stdev = pstdev(daily_count_stdevs)
     median_daily_cnt_stdev = median(daily_count_stdevs)
     daily_count_stdevs_rounded = [*map(lambda x: round(x, 1), daily_count_stdevs)]
     mode_daily_cnt_stdev_rounded = mode(daily_count_stdevs_rounded)
-    print_stats_list("Numbers Count Stdev.", daily_count_stdevs, mean_daily_cnt_stdev, 
+    print_stats_list("Numbers Count Stdev.", daily_count_stdevs, mean_daily_cnt_stdev,
                       mode_daily_cnt_stdev_rounded, stdev_daily_cnt_stdev, daily_count_stdevs_rounded)
 
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
@@ -164,85 +185,16 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     plt.xlabel("Number")
     plt.ylabel("Total")
 
-    stdevs_daily_stdevs = [*map(lambda x: mean_daily_stdevs + x*stdev_daily_stdevs,  [-3,-2,-1,1,2,3])]
-    figure_1, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
-    figure_1.suptitle("Daily Winning Numbers Stdevs. (bins={})".format(NUM_BINS))
-    figure_1.subplots_adjust(hspace=0)
-    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
-    plots[0].boxplot(daily_stdevs, vert=False)
-    plots[1].hist(daily_stdevs, edgecolor='black', bins=NUM_BINS)
-    plots[1].set_ylabel("Total")
-    plots[1].set_xlabel("Daily Stdev.")
-    plots[1].axvline(mean(daily_stdevs), label="Mean: {:.3f}".format(mean(daily_stdevs)), linestyle="--", color="red", linewidth=0.9)
-    plots[1].axvline(median(daily_stdevs), label="Median: {:.3f}".format(median(daily_stdevs)), linestyle="--", color="#00FF00", linewidth=0.9)
-    plots[1].axvline(mode(daily_stdevs_rounded), label="Rounded Mode: {}".format(mode(daily_stdevs_rounded)), linestyle="--", color="#FF8C00", linewidth=0.9)
-    plots[1].axvline(current_num_stdev, label="Last Winning Stdev.: {:.3f}".format(current_num_stdev), linestyle="-.", color="#9932CC", linewidth=1)
-    for i, stdev_stdev in enumerate(stdevs_daily_stdevs):
-        if i == 0:
-            plots[1].axvline(stdev_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
-        else:
-            plots[1].axvline(stdev_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
-    plots[1].legend(loc=0, fontsize="small")
-
-    stdevs_mean_daily_means = [*map(lambda x: mean_daily_means + x*stdev_daily_means,  [-3,-2,-1,1,2,3])]
-    figure_2, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
-    figure_2.suptitle("Daily Winning Numbers Means (bins={})".format(NUM_BINS))
-    figure_2.subplots_adjust(hspace=0)
-    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
-    plots[0].boxplot(daily_means, vert=False)
-    plots[1].hist(daily_means, edgecolor='black', bins=NUM_BINS)
-    plots[1].set_ylabel("Total")
-    plots[1].set_xlabel("Daily Mean")
-    plots[1].axvline(mean_daily_means, label="Mean: {:.3f}".format(mean_daily_means), linestyle="--", color="red", linewidth=0.9)
-    plots[1].axvline(mode_daily_means_rounded, label="Rounded Mode: {}".format(mode_daily_means_rounded), linestyle="--", color="#FF8C00", linewidth=0.9)
-    plots[1].axvline(median(daily_means), label="Median: {:.3f}".format(median(daily_means)), linestyle="--", color="#00FF00", linewidth=0.9)
-    plots[1].axvline(current_num_mean, label="Last Winning Mean: {:.3f}".format(current_num_mean), linestyle="-.", color="#9932CC", linewidth=1)
-    for i, mean_stdev in enumerate(stdevs_mean_daily_means):
-        if i == 0:
-            plots[1].axvline(mean_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
-        else:
-            plots[1].axvline(mean_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
-    plots[1].legend(loc=0, fontsize="small")
-    
-    stdevs_daily_count_means = [*map(lambda x: mean_daily_cnt_mean + x*stdev_daily_cnt_mean,  [-3,-2,-1,1,2,3])]
-    figure_3, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
-    figure_3.suptitle("Daily Numbers Frequencies Means (bins={})".format(NUM_BINS))
-    figure_3.subplots_adjust(hspace=0)
-    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
-    plots[0].boxplot(daily_count_means, vert=False)
-    plots[1].hist(daily_count_means, edgecolor='black', bins=NUM_BINS)
-    plots[1].set_ylabel("Total")
-    plots[1].set_xlabel("Daily Mean Frequency")
-    plots[1].axvline(mean_daily_cnt_mean, label="Mean: {:.3f}".format(mean_daily_cnt_mean), linestyle="--", color="red", linewidth=0.9)
-    plots[1].axvline(mode_daily_cnt_mean_rounded, label="Rounded Mode: {}".format(mode_daily_cnt_mean_rounded), linestyle="--", color="#FF8C00", linewidth=0.9)
-    plots[1].axvline(median_daily_cnt_mean, label="Median: {:.3f}".format(median_daily_cnt_mean), linestyle="--", color="#00FF00", linewidth=0.9)
-    plots[1].axvline(current_num_cnt_mean, label="Last Winning Mean Freq.: {:.3f}".format(current_num_cnt_mean), linestyle="-.", color="#9932CC", linewidth=1)
-    for i, mean_stdev in enumerate(stdevs_daily_count_means):
-        if i == 0:
-            plots[1].axvline(mean_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
-        else:
-            plots[1].axvline(mean_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
-    plots[1].legend(loc=0, fontsize="small")
-    
-    stdevs_daily_count_stdevs = [*map(lambda x: mean_daily_cnt_stdev + x*stdev_daily_cnt_stdev,  [-3,-2,-1,1,2,3])]
-    figure_4, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
-    figure_4.suptitle("Daily Numbers Frequencies Stdevs (bins={})".format(NUM_BINS))
-    figure_4.subplots_adjust(hspace=0)
-    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
-    plots[0].boxplot(daily_count_stdevs, vert=False)
-    plots[1].hist(daily_count_stdevs, edgecolor='black', bins=NUM_BINS)
-    plots[1].set_ylabel("Total")
-    plots[1].set_xlabel("Daily Frequency Stdev.")
-    plots[1].axvline(mean_daily_cnt_stdev, label="Mean: {:.3f}".format(mean_daily_cnt_stdev), linestyle="--", color="red", linewidth=0.9)
-    plots[1].axvline(mode_daily_cnt_stdev_rounded, label="Rounded Mode: {}".format(mode_daily_cnt_stdev_rounded), linestyle="--", color="#FF8C00", linewidth=0.9)
-    plots[1].axvline(median_daily_cnt_stdev, label="Median: {:.3f}".format(median_daily_cnt_stdev), linestyle="--", color="#00FF00", linewidth=0.9)
-    plots[1].axvline(current_num_cnt_stdev, label="Last Winning Mean Freq.: {:.3f}".format(current_num_cnt_stdev), linestyle="-.", color="#9932CC", linewidth=1)
-    for i, mean_stdev in enumerate(stdevs_daily_count_stdevs):
-        if i == 0:
-            plots[1].axvline(mean_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
-        else:
-            plots[1].axvline(mean_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
-    plots[1].legend(loc=0, fontsize="small")
+    plot_histogram("Daily Winning Numbers Stdevs.", "Daily Stdev.", "Stdev.", daily_stdevs, mean_daily_stdevs,
+                    stdev_daily_stdevs, mode(daily_stdevs_rounded), current_numbers, current_num_stdev)
+    plot_histogram("Daily Winning Numbers Means", "Daily Mean", "Mean", daily_means, mean_daily_means,
+                    stdev_daily_means, mode_daily_means_rounded, current_numbers, current_num_mean)
+    plot_histogram("Daily Winning Numbers Frequencies Means", "Daily Mean Frequency", "Mean Freq.",
+                    daily_count_means, mean_daily_cnt_mean, stdev_daily_cnt_mean,
+                    mode_daily_cnt_mean_rounded, current_numbers, current_num_cnt_mean)
+    plot_histogram("Daily Winning Frequencies Stdevs.", "Daily Frequency Stdev.", "Mean Freq.",
+                    daily_count_stdevs, mean_daily_cnt_stdev, stdev_daily_cnt_stdev,
+                    mode_daily_cnt_stdev_rounded, current_numbers, current_num_cnt_stdev)
 
     plt.show()
 

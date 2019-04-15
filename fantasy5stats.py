@@ -120,18 +120,20 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
 
     current_numbers_int = [*map(int, current_numbers)]
-    num_sum = sum(current_numbers_int)
-    cnt_sum = sum([*map(lambda x: histogram_dict[x], current_numbers)])
-
-    print("\nLast Winning Numbers Day Sum   : {}".format(num_sum))
-    print("Last Winning Numbers Day Mean  : {:.3f}".format(num_sum / 5))
-    print("Last Winning Numbers Day Stdev.: {:.3f}".format(pstdev(current_numbers_int)))
+    current_num_sum = sum(current_numbers_int)
+    current_num_mean = current_num_sum / 5
+    current_num_stdev = pstdev(current_numbers_int)
+    print("\nLast Winning Numbers Day Sum   : {}".format(current_num_sum))
+    print("Last Winning Numbers Day Mean  : {:.3f}".format(current_num_mean))
+    print("Last Winning Numbers Day Stdev.: {:.3f}".format(current_num_stdev))
 
     histogram_lists = [*map(list, zip(*histogram_items))]
-
+    cnt_mean = mean(histogram_lists[1])
     plt.figure(0)
     plt.bar(histogram_lists[0], histogram_lists[1], width=0.75, edgecolor='black', linewidth=0.9)
+    plt.axhline(cnt_mean, label="Mean: {:.3f}".format(cnt_mean), linestyle="--", color="red")
     plt.title("All Winning Numbers Counts ({})".format(ORDER))
+    plt.legend(loc=0, fontsize="small")
     plt.xlabel("Number")
     plt.ylabel("Total")
 
@@ -146,6 +148,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     plots[1].axvline(mean(daily_stdevs), label="Mean: {:.3f}".format(mean(daily_stdevs)), linestyle="--", color="red", linewidth=0.9)
     plots[1].axvline(median(daily_stdevs), label="Median: {:.3f}".format(median(daily_stdevs)), linestyle="--", color="#00FF00", linewidth=0.9)
     plots[1].axvline(mode(daily_stdevs_rounded), label="Rounded Mode: {}".format(mode(daily_stdevs_rounded)), linestyle="--", color="#FF8C00", linewidth=0.9)
+    plots[1].axvline(current_num_stdev, label="Last Winning Stdev.: {:.3f}".format(current_num_stdev), linestyle="-.", color="#9932CC", linewidth=1)
     for i, stdev_stdev in enumerate(stdevs_daily_stdevs):
         if i == 0:
             plots[1].axvline(stdev_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
@@ -164,6 +167,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     plots[1].axvline(mean_daily_means, label="Mean: {:.3f}".format(mean_daily_means), linestyle="--", color="red", linewidth=0.9)
     plots[1].axvline(mode(daily_means_rounded), label="Rounded Mode: {}".format(mode(daily_means_rounded)), linestyle="--", color="#FF8C00", linewidth=0.9)
     plots[1].axvline(median(daily_means), label="Median: {:.3f}".format(median(daily_means)), linestyle="--", color="#00FF00", linewidth=0.9)
+    plots[1].axvline(current_num_mean, label="Last Winning Mean: {:.3f}".format(current_num_mean), linestyle="-.", color="#9932CC", linewidth=1)
     for i, mean_stdev in enumerate(stdevs_mean_daily_means):
         if i == 0:
             plots[1].axvline(mean_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)

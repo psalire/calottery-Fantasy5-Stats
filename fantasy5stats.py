@@ -36,6 +36,7 @@ def build_histogram_and_write_to_file(lines, out_file):
     line_means = []
     line_stdevs = []
     line_count_means = []
+    line_count_stdevs = []
     numbers_arr = []
 
     for line in lines:
@@ -58,16 +59,19 @@ def build_histogram_and_write_to_file(lines, out_file):
                 else:
                     out_file.write('\n')
     for line in numbers_arr:
-        line_count_means.append(mean([*map(lambda x: histogram[x], line)]))
+        line_cnts = [*map(lambda x: histogram[x], line)]
+        line_count_means.append(mean(line_cnts))
+        line_count_stdevs.append(pstdev(line_cnts))
 
     histogram["line_sums"] = sorted(line_sums)
     histogram["line_means"] = sorted(line_means)
     histogram["line_stdevs"] = sorted(line_stdevs)
     histogram["line_count_means"] = sorted(line_count_means)
+    histogram["line_count_stdevs"] = sorted(line_count_stdevs)
     return histogram
 
 def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
-                daily_sums, daily_means, daily_stdevs, daily_count_means, current_numbers):
+                daily_sums, daily_means, daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers):
     cnt_min = ascend_hist[0]
     cnt_max = ascend_hist[-1]
     cnt_med = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
@@ -137,16 +141,31 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     print("Numbers Daily Count Mean Rounded Mode : {:.3f}".format(mode_daily_cnt_mean_rounded))
     print("Numbers Daily Count Mean Stdev.       : {:.3f}".format(stdev_daily_cnt_mean))
     print("Numbers Daily Count Mean Rounded Stdev.: {:.3f}\n".format(pstdev(daily_count_means_rounded)))
+    
+    mean_daily_cnt_stdev = mean(daily_count_stdevs)
+    stdev_daily_cnt_stdev = pstdev(daily_count_stdevs)
+    median_daily_cnt_stdev = median(daily_count_stdevs)
+    daily_count_stdevs_rounded = [*map(lambda x: round(x, 1), daily_count_stdevs)]
+    mode_daily_cnt_stdev_rounded = mode(daily_count_stdevs_rounded)
+    print("Numbers Daily Count Stdev Max          : {:.3f}".format(daily_count_stdevs[-1]))
+    print("Numbers Daily Count Stdev Min.         : {:.3f}".format(daily_count_stdevs[0]))
+    print("Numbers Daily Count Stdev Med.         : {:.3f}".format(median_daily_cnt_stdev))
+    print("Numbers Daily Count Stdev Mean         : {:.3f}".format(mean_daily_cnt_stdev))
+    print("Numbers Daily Count Stdev Rounded Mode : {:.3f}".format(mode_daily_cnt_stdev_rounded))
+    print("Numbers Daily Count Stdev Stdev.       : {:.3f}".format(stdev_daily_cnt_stdev))
+    print("Numbers Daily Count Stdev Rounded Stdev.: {:.3f}\n".format(pstdev(daily_count_stdevs_rounded)))
 
     print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
     for num in current_numbers:
         print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
 
     current_numbers_int = [*map(int, current_numbers)]
+    current_numbers_freqs = [*map(lambda x: histogram_dict[x], current_numbers)]
     current_num_sum = sum(current_numbers_int)
     current_num_mean = current_num_sum / 5
     current_num_stdev = pstdev(current_numbers_int)
-    current_num_cnt_mean = mean([*map(lambda x: histogram_dict[x], current_numbers)])
+    current_num_cnt_mean = mean(current_numbers_freqs)
+    current_num_cnt_stdev = pstdev(current_numbers_freqs)
     print("\nLast Winning Numbers Day Sum        : {}".format(current_num_sum))
     print("Last Winning Numbers Day Mean       : {:.3f}".format(current_num_mean))
     print("Last Winning Numbers Day Stdev.     : {:.3f}".format(current_num_stdev))
@@ -222,6 +241,26 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
         else:
             plots[1].axvline(mean_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
     plots[1].legend(loc=0, fontsize="small")
+    
+    stdevs_daily_count_stdevs = [*map(lambda x: mean_daily_cnt_stdev + x*stdev_daily_cnt_stdev,  [-3,-2,-1,1,2,3])]
+    figure_4, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
+    figure_4.suptitle("Daily Numbers Frequencies Stdevs (bins={})".format(NUM_BINS))
+    figure_4.subplots_adjust(hspace=0)
+    plots[0].set_title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
+    plots[0].boxplot(daily_count_stdevs, vert=False)
+    plots[1].hist(daily_count_stdevs, edgecolor='black', bins=NUM_BINS)
+    plots[1].set_ylabel("Total")
+    plots[1].set_xlabel("Daily Frequency Stdev.")
+    plots[1].axvline(mean_daily_cnt_stdev, label="Mean: {:.3f}".format(mean_daily_cnt_stdev), linestyle="--", color="red", linewidth=0.9)
+    plots[1].axvline(mode_daily_cnt_stdev_rounded, label="Rounded Mode: {}".format(mode_daily_cnt_stdev_rounded), linestyle="--", color="#FF8C00", linewidth=0.9)
+    plots[1].axvline(median_daily_cnt_stdev, label="Median: {:.3f}".format(median_daily_cnt_stdev), linestyle="--", color="#00FF00", linewidth=0.9)
+    plots[1].axvline(current_num_cnt_stdev, label="Last Winning Mean Freq.: {:.3f}".format(current_num_cnt_stdev), linestyle="-.", color="#9932CC", linewidth=1)
+    for i, mean_stdev in enumerate(stdevs_daily_count_stdevs):
+        if i == 0:
+            plots[1].axvline(mean_stdev, linestyle="-", label="Stdev.", color="#2F4F4F", linewidth=0.9)
+        else:
+            plots[1].axvline(mean_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
+    plots[1].legend(loc=0, fontsize="small")
 
     plt.show()
 
@@ -250,6 +289,7 @@ def main():
     daily_means = histogram.pop("line_means", None)
     daily_stdevs = histogram.pop("line_stdevs", None)
     daily_count_means = histogram.pop("line_count_means", None)
+    daily_count_stdevs = histogram.pop("line_count_stdevs", None)
 
     # Sort histogram, ascending
     hist_ascend = sorted(histogram.items(), key=lambda x: x[1])
@@ -267,7 +307,8 @@ def main():
     for val in sorted_hist:
         tot += val[1]
 
-    print_stats(sorted_hist, histogram, hist_ascend, tot, tot_sum, daily_sums, daily_means, daily_stdevs, daily_count_means, re.findall(r'\d+', lines[5])[3:])
+    print_stats(sorted_hist, histogram, hist_ascend, tot, tot_sum, daily_sums, daily_means,
+                daily_stdevs, daily_count_means, daily_count_stdevs, re.findall(r'\d+', lines[5])[3:])
 
 if __name__ == "__main__":
     main()

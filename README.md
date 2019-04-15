@@ -17,5 +17,7 @@ todo: more stats, matlab plots
 
 ![Frequencies](frequencies.png "Frequencies")
 
+![Frequency Stdevs](frequencies_stdevs.png "Frequencies Stdevs.")
+
 ![Counts](counts.png "Counts")
 

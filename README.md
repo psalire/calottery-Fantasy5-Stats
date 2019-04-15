@@ -15,7 +15,7 @@ todo: more stats, matlab plots
 
 ![Means](means.png "Means")
 
-![Counts](counts.png "Counts")
-
 ![Frequencies](frequencies.png "Frequencies")
+
+![Counts](counts.png "Counts")
 

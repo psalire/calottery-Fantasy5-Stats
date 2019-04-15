@@ -4,6 +4,7 @@ import argparse
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Rectangle
 from statistics import mode, median, mean, pstdev
 
 ORDER = "Numerical Order"
@@ -19,7 +20,7 @@ def get_args():
     parser.add_argument('--filename', nargs=1, default=['raw_numbers.txt'], help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
     return parser.parse_args()
 
-def get_file():
+def get_fantasy5_file():
     page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=fantasy-5&Order=No')
     # Fix line endings
     txt_file = str(page.content).replace(r'\r', '\r')
@@ -68,6 +69,7 @@ def build_histogram_and_write_to_file(lines, out_file):
     histogram["line_stdevs"] = sorted(line_stdevs)
     histogram["line_count_means"] = sorted(line_count_means)
     histogram["line_count_stdevs"] = sorted(line_count_stdevs)
+    histogram["all_lines"] = [*map(lambda x: [*map(int, x)], numbers_arr)]
     return histogram
 
 def print_stats_list(label, list, mean_list, mode_list_rounded, stdev_list, list_rounded):
@@ -101,8 +103,8 @@ def plot_histogram(title, xlabel, factor, list, mean_list, stdev_list, mode_list
             plots[1].axvline(fac, linestyle="-", color="#2F4F4F", linewidth=0.9)
     plots[1].legend(loc=0, fontsize="small")
 
-def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
-                daily_sums, daily_means, daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers):
+def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, daily_sums, daily_means,
+                daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers, all_lines):
     cnt_min = ascend_hist[0]
     cnt_max = ascend_hist[-1]
     cnt_med = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
@@ -174,6 +176,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     print("Last Winning Numbers Day Stdev.     : {:.3f}".format(current_num_stdev))
     print("Last Winning Numbers Day Count Mean.: {:.3f}".format(current_num_cnt_mean))
 
+    # Figure 0
     histogram_lists = [*map(list, zip(*histogram_items))]
     cnt_mean = mean(histogram_lists[1])
     plt.figure(0)
@@ -185,18 +188,110 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum,
     plt.xlabel("Number")
     plt.ylabel("Total")
 
+    # Figure 1
     plot_histogram("Daily Winning Numbers Stdevs.", "Daily Stdev.", "Stdev.", daily_stdevs, mean_daily_stdevs,
                     stdev_daily_stdevs, mode(daily_stdevs_rounded), current_numbers, current_num_stdev)
+    # Figure 2
     plot_histogram("Daily Winning Numbers Means", "Daily Mean", "Mean", daily_means, mean_daily_means,
                     stdev_daily_means, mode_daily_means_rounded, current_numbers, current_num_mean)
+    # Figure 3
     plot_histogram("Daily Winning Numbers Frequencies Means", "Daily Mean Frequency", "Mean Freq.",
                     daily_count_means, mean_daily_cnt_mean, stdev_daily_cnt_mean,
                     mode_daily_cnt_mean_rounded, current_numbers, current_num_cnt_mean)
+    # Figure 4
     plot_histogram("Daily Winning Frequencies Stdevs.", "Daily Frequency Stdev.", "Mean Freq.",
                     daily_count_stdevs, mean_daily_cnt_stdev, stdev_daily_cnt_stdev,
                     mode_daily_cnt_stdev_rounded, current_numbers, current_num_cnt_stdev)
 
+    print("Loading...")
+    # Figure 5
+    plt.figure(5)
+    in_stdev = {}
+    in_stdev["1"] = 0
+    in_stdev["2"] = 0
+    in_stdev["3"] = 0
+    in_stdev["4"] = 0
+    in_stdev["1,2"] = 0
+    in_stdev["1,3"] = 0
+    in_stdev["1,4"] = 0
+    in_stdev["2,3"] = 0
+    in_stdev["2,4"] = 0
+    in_stdev["1,2,3"] = 0
+    in_stdev["1,2,4"] = 0
+    in_stdev["1,3,4"] = 0
+    in_stdev["2,3,4"] = 0
+    in_stdev["1,2,3,4"] = 0
+    in_stdev["0"] = 0
+    for line in all_lines:
+        stdev_line = pstdev(line)
+        mean_line = mean(line)
+        mean_freq_line = mean([*map(lambda x: histogram_dict[x], [*map(str, line)])])
+        stdev_freq_line = pstdev(line)
+        t_1 = False
+        t_2 = False
+        t_3 = False
+        t_4 = False
+        if stdev_line < mean_daily_stdevs + stdev_daily_stdevs and\
+           stdev_line > mean_daily_stdevs - stdev_daily_stdevs:
+            t_1 = True
+        if mean_line < mean_daily_means + stdev_daily_means and\
+           mean_line > mean_daily_means - stdev_daily_means:
+            t_2 = True
+        if mean_freq_line < mean_daily_cnt_mean + stdev_daily_cnt_mean and\
+           mean_freq_line > mean_daily_cnt_mean - stdev_daily_cnt_mean:
+            t_3 = True
+        if stdev_freq_line < mean_daily_cnt_stdev + stdev_daily_cnt_stdev and\
+           stdev_freq_line > mean_daily_cnt_stdev - stdev_daily_cnt_stdev:
+            t_4 = True
+        if check_cond(t_1, t_2, t_3, t_4, True, False, False, False):
+            in_stdev["1"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, False, True, False, False):
+            in_stdev["2"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, False, False, True, False):
+            in_stdev["3"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, False, False, False, True):
+            in_stdev["4"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, True, False, False):
+            in_stdev["1,2"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, False, True, False):
+            in_stdev["1,3"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, False, False, True):
+            in_stdev["1,4"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, False, True, True, False):
+            in_stdev["2,3"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, False, True, False, True):
+            in_stdev["2,4"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, True, True, False):
+            in_stdev["1,2,3"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, True, False, True):
+            in_stdev["1,2,4"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, False, True, True):
+            in_stdev["1,3,4"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, False, True, True, True):
+            in_stdev["2,3,4"] += 1
+        elif check_cond(t_1, t_2, t_3, t_4, True, True, True, True):
+            in_stdev["1,2,3,4"] += 1
+        else:
+            in_stdev["0"] += 1
+    plt.suptitle("Daily Winning Numbers Within +/-1 Stdev. of Mean")
+    plt.title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
+    plt.xlabel("Conditions")
+    plt.ylabel("Total")
+    plt.plot([], [], " ", label="1: Daily Stdev.")
+    plt.plot([], [], " ", label="2: Daily Mean")
+    plt.plot([], [], " ", label="3: Daily Freq. Mean")
+    plt.plot([], [], " ", label="4: Daily Freq. Stdev.")
+    plt.plot([], [], " ", label="0: None")
+    plt.legend(loc=0, handlelength=0, handletextpad=0, fontsize="small")
+    plt.bar(list(in_stdev.keys()), in_stdev.values(), edgecolor="black")
+    print("Showing plots...")
+
     plt.show()
+
+def check_cond(t1, t2, t3, t4, cond1, cond2, cond3, cond4):
+    if t1 == cond1 and t2 == cond2 and t3 == cond3 and t4 == cond4:
+        return True
+    return False
 
 #### MAIN ####
 def main():
@@ -206,10 +301,12 @@ def main():
 
     print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5 | " + CURRENT_DATE))
 
+    print("Fetching...")
     # Get txt file
-    lotto_file = get_file()
+    lotto_file = get_fantasy5_file()
     lines = lotto_file.split('\n')
 
+    print("Parsing...")
     # Extract numbers from txt file to build histogram & save raw_numbers file
     raw_numbers = None
     if args.nosave == False:
@@ -217,13 +314,16 @@ def main():
     histogram = build_histogram_and_write_to_file(lines[5:], raw_numbers)
     if args.nosave == False:
         raw_numbers.close()
+        print("Saved: {}".format(args.filename[0]))
 
+    # Get computed values
     tot_sum = histogram.pop("sum", None)
     daily_sums = histogram.pop("line_sums", None)
     daily_means = histogram.pop("line_means", None)
     daily_stdevs = histogram.pop("line_stdevs", None)
     daily_count_means = histogram.pop("line_count_means", None)
     daily_count_stdevs = histogram.pop("line_count_stdevs", None)
+    all_lines = histogram.pop("all_lines", None)
 
     # Sort histogram, ascending
     hist_ascend = sorted(histogram.items(), key=lambda x: x[1])
@@ -241,8 +341,9 @@ def main():
     for val in sorted_hist:
         tot += val[1]
 
+    print("Printing...")
     print_stats(sorted_hist, histogram, hist_ascend, tot, tot_sum, daily_sums, daily_means,
-                daily_stdevs, daily_count_means, daily_count_stdevs, re.findall(r'\d+', lines[5])[3:])
+                daily_stdevs, daily_count_means, daily_count_stdevs, [*map(str, all_lines[0])], all_lines)
 
 if __name__ == "__main__":
     main()

@@ -5,11 +5,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from statistics import mode, median, mean, pstdev
 
+ORDER = "Numerical Order"
+NUM_BINS = 50
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--ascending', action='store_true', default=False, help='Print and plot stats in ascending order by frequency.')
     parser.add_argument('-d', '--descending', action='store_true', default=False, help='Print and plot stats in descending order by frequency.')
     parser.add_argument('--nosave', action='store_true', default=False, help='Don\'t save a raw numbers file.')
+    parser.add_argument('-b', '--bins', nargs=1, default=[50], help='Number of bins for plotting histograms. Default: 50')
     parser.add_argument('--filename', nargs=1, default=['raw_numbers.txt'], help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
     return parser.parse_args()
 
@@ -54,35 +58,37 @@ def build_histogram_and_write_to_file(lines, out_file):
     return histogram
 
 def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, daily_sums, daily_means, daily_stdevs, current_numbers):
-    min_val = ascend_hist[0]
-    max_val = ascend_hist[-1]
-    med_val = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
+    cnt_min = ascend_hist[0]
+    cnt_max = ascend_hist[-1]
+    cnt_med = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
+    cnt_mode = mode(histogram_dict.values())
+    cnt_stdev = pstdev(histogram_dict.values())
     print("Number: Count (% of total)")
     for val in histogram_items:
         print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot_cnt)*100))
     print("")
     print("Total Number Count: {}\n".format(tot_cnt))
-    print("Count Max   : #{:<7}: {} ({:.3f}%)".format(max_val[0], max_val[1], (max_val[1] / tot_cnt)*100))
-    print("Count Min.  : #{:<7}: {} ({:.3f}%)".format(min_val[0], min_val[1], (min_val[1] / tot_cnt)*100))
+    print("Count Max   : #{:<7}: {} ({:.3f}%)".format(cnt_max[0], cnt_max[1], (cnt_max[1] / tot_cnt)*100))
+    print("Count Min.  : #{:<7}: {} ({:.3f}%)".format(cnt_min[0], cnt_min[1], (cnt_min[1] / tot_cnt)*100))
     print("Count Mean  : {:.3f} ({:.3f}%)".format(tot_cnt / 39, (1 / 39)*100))
-    print("Count Median: {:.3f} ({:.3f}%)".format(med_val, (med_val / tot_cnt)*100))
-    cnt_mode = mode(histogram_dict.values())
+    print("Count Median: {:.3f} ({:.3f}%)".format(cnt_med, (cnt_med / tot_cnt)*100))
     print("Count Mode  : {}     ({:.3f}%)".format(cnt_mode, (cnt_mode / tot_cnt)*100))
-    cnt_stdev = pstdev(histogram_dict.values())
     print("Count Stdev.: {:.3f}   ({:.3f}%)\n".format(cnt_stdev, (cnt_stdev / tot_cnt)*100))
+
+    print("Numbers Total Sum     : {}".format(tot_sum))
+    print("Numbers Total Sum Mean: {:.3f}\n".format(tot_sum / tot_cnt))
 
     mean_daily_means = mean(daily_means)
     stdev_daily_means = pstdev(daily_means)
     daily_means_rounded = [*map(lambda x: round(x, 1), daily_means)]
-    print("Numbers Total Sum     : {}".format(tot_sum))
-    print("Numbers Total Sum Mean: {:.3f}\n".format(tot_sum / tot_cnt))
     print("Numbers Daily Mean Max   : {:.3f}".format(daily_means[-1]))
     print("Numbers Daily Mean Min.  : {:.3f}".format(daily_means[0]))
     print("Numbers Daily Mean Mean  : {:.3f}".format(mean_daily_means))
     print("Numbers Daily Mean Median: {:.3f}".format(median(daily_means)))
     print("Numbers Daily Mean Mode  : {:.3f}".format(mode(daily_means)))
     print("Numbers Daily Mean Rounded Mode  : {:.3f}".format(mode(daily_means_rounded)))
-    print("Numbers Daily Mean Stdev.: {:.3f}\n".format(stdev_daily_means))
+    print("Numbers Daily Mean Stdev.: {:.3f}".format(stdev_daily_means))
+    print("Numbers Daily Mean Rounded Stdev.: {}\n".format(pstdev(daily_means_rounded)))
 
     mean_daily_stdevs = mean(daily_stdevs)
     stdev_daily_stdevs = pstdev(daily_stdevs)
@@ -125,14 +131,16 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
 
     plt.figure(0)
     plt.bar(histogram_lists[0], histogram_lists[1], width=0.75, edgecolor='black', linewidth=0.9)
-    plt.title("All Winning Numbers")
+    plt.title("All Winning Numbers Counts ({})".format(ORDER))
+    plt.xlabel("Number")
+    plt.ylabel("Total")
 
     stdevs_daily_stdevs = [*map(lambda x: mean_daily_stdevs + x*stdev_daily_stdevs,  [-3,-2,-1,1,2,3])]
     figure_1, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
-    figure_1.suptitle("Daily Winning Numbers Stdevs.")
+    figure_1.suptitle("Daily Winning Numbers Stdevs. (bins={})".format(NUM_BINS))
     figure_1.subplots_adjust(hspace=0)
     plots[0].boxplot(daily_stdevs, vert=False)
-    plots[1].hist(daily_stdevs, edgecolor='black', bins=50)
+    plots[1].hist(daily_stdevs, edgecolor='black', bins=NUM_BINS)
     plots[1].set_ylabel("Total")
     plots[1].set_xlabel("Daily Stdev.")
     plots[1].axvline(mean(daily_stdevs), label="Mean: {:.3f}".format(mean(daily_stdevs)), linestyle="--", color="red", linewidth=0.9)
@@ -147,10 +155,10 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
 
     stdevs_mean_daily_means = [*map(lambda x: mean_daily_means + x*stdev_daily_means,  [-3,-2,-1,1,2,3])]
     figure_2, plots = plt.subplots(2, 1, gridspec_kw = {'height_ratios':[1, 4]}, sharex=True)
-    figure_2.suptitle("Daily Winning Numbers Means")
+    figure_2.suptitle("Daily Winning Numbers Means (bins={})".format(NUM_BINS))
     figure_2.subplots_adjust(hspace=0)
     plots[0].boxplot(daily_means, vert=False)
-    plots[1].hist(daily_means, edgecolor='black', bins=50)
+    plots[1].hist(daily_means, edgecolor='black', bins=NUM_BINS)
     plots[1].set_ylabel("Total")
     plots[1].set_xlabel("Daily Mean")
     plots[1].axvline(mean_daily_means, label="Mean: {:.3f}".format(mean_daily_means), linestyle="--", color="red", linewidth=0.9)
@@ -162,15 +170,14 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
         else:
             plots[1].axvline(mean_stdev, linestyle="-", color="#2F4F4F", linewidth=0.9)
     plots[1].legend(loc=0, fontsize="small")
-    # plt.subplot(212)
-    # plt.title("Daily Winning Numbers Means")
-    # plots[1].set_ylabel("Mean")
 
     plt.show()
 
 #### MAIN ####
 def main():
+    global NUM_BINS, ORDER
     args = get_args()
+    NUM_BINS = int(args.bins[0])
 
     print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5"))
 
@@ -195,7 +202,9 @@ def main():
     hist_ascend = sorted(histogram.items(), key=lambda x: x[1])
     if args.ascending == True or args.descending == True:
         sorted_hist = hist_ascend
+        ORDER = "Ascending Order"
         if args.descending == True:
+            ORDER = "Descending Order"
             sorted_hist.reverse() # Descending order
     else:
         sorted_hist = histogram.items()

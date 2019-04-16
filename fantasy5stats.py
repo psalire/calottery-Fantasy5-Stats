@@ -5,11 +5,15 @@ import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle
-from statistics import mode, median, mean, pstdev
+from statistics import median, mean, pstdev
+from scipy.stats import mode
 
 ORDER = "Numerical Order"
 NUM_BINS = 50
 CURRENT_DATE = str(datetime.datetime.now().strftime("%Y/%m/%d"))
+
+def my_mode(arr):
+    return mode(arr)[0][0]
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -77,7 +81,7 @@ def print_stats_list(label, list, mean_list, mode_list_rounded, stdev_list, list
     print("{:<36}: {:.3f}".format(label+" Min.", list[0]))
     print("{:<36}: {:.3f}".format(label+" Mean", mean_list))
     print("{:<36}: {:.3f}".format(label+" Median", median(list)))
-    print("{:<36}: {:.3f}".format(label+" Mode", mode(list)))
+    print("{:<36}: {:.3f}".format(label+" Mode", my_mode(list)))
     print("{:<36}: {:.3f}".format(label+" Rounded Mode", mode_list_rounded))
     print("{:<36}: {:.3f}".format(label+" Stdev.", stdev_list))
     print("{:<36}: {:.3f}\n".format(label+" Rounded Stdev.", pstdev(list_rounded)))
@@ -108,7 +112,8 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     cnt_min = ascend_hist[0]
     cnt_max = ascend_hist[-1]
     cnt_med = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
-    cnt_mode = mode(histogram_dict.values())
+    cnt_mode = my_mode(list(histogram_dict.values()))
+    
     cnt_stdev = pstdev(histogram_dict.values())
     print("Number: Count (% of total)")
     for val in histogram_items:
@@ -127,36 +132,36 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
 
     mean_daily_means = mean(daily_means)
     stdev_daily_means = pstdev(daily_means)
-    daily_means_rounded = [*map(lambda x: round(x, 1), daily_means)]
-    mode_daily_means_rounded = mode(daily_means_rounded)
+    daily_means_rounded = [*map(lambda x: round(x, 2), daily_means)]
+    mode_daily_means_rounded = my_mode(daily_means_rounded)
     print_stats_list("Numbers Daily Mean", daily_means, mean_daily_means,
                       mode_daily_means_rounded, stdev_daily_means, daily_means_rounded)
 
     mean_daily_stdevs = mean(daily_stdevs)
     stdev_daily_stdevs = pstdev(daily_stdevs)
-    daily_stdevs_rounded = [*map(lambda x: round(x, 1), daily_stdevs)]
-    mode_daily_stdevs_rounded = mode(daily_stdevs_rounded)
+    daily_stdevs_rounded = [*map(lambda x: round(x, 2), daily_stdevs)]
+    mode_daily_stdevs_rounded = my_mode(daily_stdevs_rounded)
     print_stats_list("Numbers Daily Stdev.", daily_stdevs, mean_daily_stdevs,
                       mode_daily_stdevs_rounded, stdev_daily_stdevs, daily_stdevs_rounded)
 
     daily_sums_means = [*map(lambda x: (x/5), daily_sums)]
-    daily_sums_rounded_means = [*map(lambda x: round(x, 1), daily_sums_means)]
+    daily_sums_rounded_means = [*map(lambda x: round(x, 2), daily_sums_means)]
     print_stats_list("Numbers Daily Sum", daily_sums, mean(daily_sums),
-                      mode(daily_sums_rounded_means), pstdev(daily_sums_means), daily_sums_rounded_means)
+                      my_mode(daily_sums_rounded_means), pstdev(daily_sums_means), daily_sums_rounded_means)
 
     mean_daily_cnt_mean = mean(daily_count_means)
     stdev_daily_cnt_mean = pstdev(daily_count_means)
     median_daily_cnt_mean = median(daily_count_means)
-    daily_count_means_rounded = [*map(lambda x: round(x, 1), daily_count_means)]
-    mode_daily_cnt_mean_rounded = mode(daily_count_means_rounded)
+    daily_count_means_rounded = [*map(lambda x: round(x, 2), daily_count_means)]
+    mode_daily_cnt_mean_rounded = my_mode(daily_count_means_rounded)
     print_stats_list("Numbers Count Mean", daily_count_means, mean_daily_cnt_mean,
                       mode_daily_cnt_mean_rounded, stdev_daily_cnt_mean, daily_count_means_rounded)
 
     mean_daily_cnt_stdev = mean(daily_count_stdevs)
     stdev_daily_cnt_stdev = pstdev(daily_count_stdevs)
     median_daily_cnt_stdev = median(daily_count_stdevs)
-    daily_count_stdevs_rounded = [*map(lambda x: round(x, 1), daily_count_stdevs)]
-    mode_daily_cnt_stdev_rounded = mode(daily_count_stdevs_rounded)
+    daily_count_stdevs_rounded = [*map(lambda x: round(x, 2), daily_count_stdevs)]
+    mode_daily_cnt_stdev_rounded = my_mode(daily_count_stdevs_rounded)
     print_stats_list("Numbers Count Stdev.", daily_count_stdevs, mean_daily_cnt_stdev,
                       mode_daily_cnt_stdev_rounded, stdev_daily_cnt_stdev, daily_count_stdevs_rounded)
 
@@ -190,7 +195,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
 
     # Figure 1
     plot_histogram("Daily Winning Numbers Stdevs.", "Daily Stdev.", "Stdev.", daily_stdevs, mean_daily_stdevs,
-                    stdev_daily_stdevs, mode(daily_stdevs_rounded), current_numbers, current_num_stdev)
+                    stdev_daily_stdevs, my_mode(daily_stdevs_rounded), current_numbers, current_num_stdev)
     # Figure 2
     plot_histogram("Daily Winning Numbers Means", "Daily Mean", "Mean", daily_means, mean_daily_means,
                     stdev_daily_means, mode_daily_means_rounded, current_numbers, current_num_mean)

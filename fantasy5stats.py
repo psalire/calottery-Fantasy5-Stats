@@ -2,6 +2,7 @@ import re
 import requests
 import argparse
 import datetime
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Rectangle
@@ -11,18 +12,27 @@ from scipy.stats import mode
 ORDER = "Numerical Order"
 NUM_BINS = 50
 CURRENT_DATE = str(datetime.datetime.now().strftime("%Y/%m/%d"))
+F5_STDEV = 1
+GENERATE_NUMS = False
 
 def my_mode(arr):
     return mode(arr)[0][0]
 
 def get_args():
+    global NUM_BINS, ORDER, F5_STDEV, GENERATE_NUMS
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--ascending', action='store_true', default=False, help='Print and plot stats in ascending order by frequency.')
     parser.add_argument('-d', '--descending', action='store_true', default=False, help='Print and plot stats in descending order by frequency.')
+    parser.add_argument('-g', '--generate', action='store_true', default=False, help='Skip plotting & prompt user for generating numbers in SD.')
     parser.add_argument('--nosave', action='store_true', default=False, help='Don\'t save a raw numbers file.')
     parser.add_argument('-b', '--bins', nargs=1, default=[50], help='Number of bins for plotting histograms. Default: 50')
+    parser.add_argument('--stdev', nargs=1, default=[1], help='+/- Stdev. to use for figure 5 and option -c. Default: 1')
     parser.add_argument('--filename', nargs=1, default=['raw_numbers.txt'], help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
-    return parser.parse_args()
+    args = parser.parse_args()
+    NUM_BINS = int(args.bins[0])
+    F5_STDEV = float(args.stdev[0])
+    GENERATE_NUMS = bool(args.generate)
+    return args
 
 def get_fantasy5_file():
     page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=fantasy-5&Order=No')
@@ -113,7 +123,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     cnt_max = ascend_hist[-1]
     cnt_med = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
     cnt_mode = my_mode(list(histogram_dict.values()))
-    
+
     cnt_stdev = pstdev(histogram_dict.values())
     print("Number: Count (% of total)")
     for val in histogram_items:
@@ -181,6 +191,66 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Last Winning Numbers Day Stdev.     : {:.3f}".format(current_num_stdev))
     print("Last Winning Numbers Day Count Mean.: {:.3f}".format(current_num_cnt_mean))
 
+    if GENERATE_NUMS == True:
+        print("Enter your 5 numbers")
+        while True:
+            user_in = input("Skip > ")
+            if user_in == "quit":
+                return
+            to_skip = [*map(int, re.findall(r"\d+", user_in))]
+            
+            user_in = input("Use > ")
+            if user_in == "quit":
+                return
+            to_use = [*map(int, re.findall(r"\d+", user_in))]
+            
+            if any(i in to_skip for i in to_use):
+                print("Invalid, duplicates")
+                continue
+            # nums = [*map(int, re.findall(r"\d+", user_in))]
+            # if len(nums) != 5 or all(num > 0 and num < 40 for num in nums) == False:
+                # print("Invalid input, need 5 numbers, 1 to 39")
+                # continue
+            if all(num > 0 and num < 40 for num in to_skip) == False:
+                print("Invalid, must be 1 to 39")
+                continue
+            print("Generating...")
+            while True:
+                nums = random.sample([x for x in range(1,40) if x not in to_skip], 5)
+                if all(use in nums for use in to_use) == False:
+                    continue
+                stdev_nums = pstdev(nums)
+                mean_nums = mean(nums)
+                freqs_nums = [*map(lambda x: histogram_dict[x], [*map(str, nums)])]
+                mean_freq_nums = mean(freqs_nums)
+                stdev_freq_nums = pstdev(freqs_nums)
+                t_1 = False
+                t_2 = False
+                t_3 = False
+                t_4 = False
+
+                sd = stdev_daily_stdevs * F5_STDEV
+                if stdev_nums < mean_daily_stdevs + sd and\
+                   stdev_nums > mean_daily_stdevs - sd:
+                    t_1 = True
+                sd = stdev_daily_means * F5_STDEV
+                if mean_nums < mean_daily_means + sd and\
+                   mean_nums > mean_daily_means - sd:
+                    t_2 = True
+                sd = stdev_daily_cnt_mean * F5_STDEV
+                if mean_freq_nums < mean_daily_cnt_mean + sd and\
+                   mean_freq_nums > mean_daily_cnt_mean - sd:
+                    t_3 = True
+                sd = stdev_daily_cnt_stdev * F5_STDEV
+                if stdev_freq_nums < mean_daily_cnt_stdev + sd and\
+                   stdev_freq_nums > mean_daily_cnt_stdev - sd:
+                    t_4 = True
+
+                if t_1 and t_2 and t_3 and t_4:
+                    print(nums)
+                    break
+            # print("1: {}\n2: {}\n3: {}\n4: {}".format(t_1, t_2, t_3, t_4))
+
     # Figure 0
     histogram_lists = [*map(list, zip(*histogram_items))]
     cnt_mean = mean(histogram_lists[1])
@@ -237,17 +307,21 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
         t_2 = False
         t_3 = False
         t_4 = False
-        if stdev_line < mean_daily_stdevs + stdev_daily_stdevs and\
-           stdev_line > mean_daily_stdevs - stdev_daily_stdevs:
+        sd = stdev_daily_stdevs * F5_STDEV
+        if stdev_line < mean_daily_stdevs + sd and\
+           stdev_line > mean_daily_stdevs - sd:
             t_1 = True
-        if mean_line < mean_daily_means + stdev_daily_means and\
-           mean_line > mean_daily_means - stdev_daily_means:
+        sd = stdev_daily_means * F5_STDEV
+        if mean_line < mean_daily_means + sd and\
+           mean_line > mean_daily_means - sd:
             t_2 = True
-        if mean_freq_line < mean_daily_cnt_mean + stdev_daily_cnt_mean and\
-           mean_freq_line > mean_daily_cnt_mean - stdev_daily_cnt_mean:
+        sd = stdev_daily_cnt_mean * F5_STDEV
+        if mean_freq_line < mean_daily_cnt_mean + sd and\
+           mean_freq_line > mean_daily_cnt_mean - sd:
             t_3 = True
-        if stdev_freq_line < mean_daily_cnt_stdev + stdev_daily_cnt_stdev and\
-           stdev_freq_line > mean_daily_cnt_stdev - stdev_daily_cnt_stdev:
+        sd = stdev_daily_cnt_stdev * F5_STDEV
+        if stdev_freq_line < mean_daily_cnt_stdev + sd and\
+           stdev_freq_line > mean_daily_cnt_stdev - sd:
             t_4 = True
         if check_cond(t_1, t_2, t_3, t_4, True, False, False, False):
             in_stdev["1"] += 1
@@ -279,14 +353,14 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
             in_stdev["1,2,3,4"] += 1
         else:
             in_stdev["0"] += 1
-    plt.suptitle("Daily Winning Numbers Within +/-1 Stdev. of Mean")
+    plt.suptitle("Daily Winning Numbers Within +/-{} Stdev. of Mean".format(F5_STDEV))
     plt.title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
     plt.xlabel("Conditions")
     plt.ylabel("Total")
-    plt.plot([], [], " ", label="1: Daily SD within +/-1 SD of Mean SD")
-    plt.plot([], [], " ", label="2: Daily Mean within +/-1 SD of Mean Mean")
-    plt.plot([], [], " ", label="3: Daily Freq. within +/-1 SD of Mean Freq.")
-    plt.plot([], [], " ", label="4: Daily Freq. SD within +/-1 SD of Mean Freq. SD")
+    plt.plot([], [], " ", label="1: Daily SD within +/-{} SD of Mean SD".format(F5_STDEV))
+    plt.plot([], [], " ", label="2: Daily Mean within +/-{} SD of Mean Mean".format(F5_STDEV))
+    plt.plot([], [], " ", label="3: Daily Freq. within +/-{} SD of Mean Freq.".format(F5_STDEV))
+    plt.plot([], [], " ", label="4: Daily Freq. SD within +/-{} SD of Mean Freq. SD".format(F5_STDEV))
     plt.plot([], [], " ", label="0: None")
     plt.legend(loc=0, handlelength=0, handletextpad=0, fontsize="small")
     plt.bar(list(in_stdev.keys()), in_stdev.values(), edgecolor="black")
@@ -301,9 +375,7 @@ def check_cond(t1, t2, t3, t4, cond1, cond2, cond3, cond4):
 
 #### MAIN ####
 def main():
-    global NUM_BINS, ORDER
     args = get_args()
-    NUM_BINS = int(args.bins[0])
 
     print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5 | " + CURRENT_DATE))
 

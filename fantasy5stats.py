@@ -16,9 +16,7 @@ F5_STDEV = 1
 GENERATE_NUMS = False
 
 def check_cond(t1, t2, t3, t4, cond1, cond2, cond3, cond4):
-    if t1 == cond1 and t2 == cond2 and t3 == cond3 and t4 == cond4:
-        return True
-    return False
+    return t1 == cond1 and t2 == cond2 and t3 == cond3 and t4 == cond4
 
 def my_mode(arr):
     return mode(arr)[0][0]

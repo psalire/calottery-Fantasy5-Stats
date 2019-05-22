@@ -15,6 +15,11 @@ CURRENT_DATE = str(datetime.datetime.now().strftime("%Y/%m/%d"))
 F5_STDEV = 1
 GENERATE_NUMS = False
 
+def check_cond(t1, t2, t3, t4, cond1, cond2, cond3, cond4):
+    if t1 == cond1 and t2 == cond2 and t3 == cond3 and t4 == cond4:
+        return True
+    return False
+
 def my_mode(arr):
     return mode(arr)[0][0]
 
@@ -27,7 +32,9 @@ def get_args():
     parser.add_argument('--nosave', action='store_true', default=False, help='Don\'t save a raw numbers file.')
     parser.add_argument('-b', '--bins', nargs=1, default=[50], help='Number of bins for plotting histograms. Default: 50')
     parser.add_argument('--stdev', nargs=1, default=[1], help='+/- Stdev. to use for figure 5 and option -c. Default: 1')
-    parser.add_argument('--filename', nargs=1, default=['raw_numbers.txt'], help='Filename to save raw numbers file as. Default: \'raw_numbers.txt\'')
+    parser.add_argument('--savefile', action='store_true', default=False, help='Save the calottery .txt file as fantasy5results.txt. Default: False')
+    parser.add_argument('--uselocal', action='store_true', default=False, help='Use local fantasy5results.txt file from --savefile, instead of fetch. Default: False')
+    parser.add_argument('--nonverbose', action='store_true', default=False, help='No output. Default: False')
     args = parser.parse_args()
     NUM_BINS = int(args.bins[0])
     F5_STDEV = float(args.stdev[0])
@@ -37,9 +44,7 @@ def get_args():
 def get_fantasy5_file():
     page = requests.get('https://www.calottery.com/sitecore/content/Miscellaneous/download-numbers/?GameName=fantasy-5&Order=No')
     # Fix line endings
-    txt_file = str(page.content).replace(r'\r', '\r')
-    txt_file = txt_file.replace(r'\n', '\n')
-    return txt_file
+    return str(page.content).replace(r'\r', '\r').replace(r'\n', '\n')
 
 def build_histogram_and_write_to_file(lines, out_file):
     # Initialize histogram
@@ -118,66 +123,73 @@ def plot_histogram(title, xlabel, factor, list, mean_list, stdev_list, mode_list
     plots[1].legend(loc=0, fontsize="small")
 
 def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, daily_sums, daily_means,
-                daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers, all_lines):
+                daily_stdevs, daily_count_means, daily_count_stdevs, current_numbers, all_lines, nonverbose):
     cnt_min = ascend_hist[0]
     cnt_max = ascend_hist[-1]
     cnt_med = (ascend_hist[19][1] + ascend_hist[20][1]) / 2
     cnt_mode = my_mode(list(histogram_dict.values()))
 
     cnt_stdev = pstdev(histogram_dict.values())
-    print("Number: Count (% of total)")
-    for val in histogram_items:
-        print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot_cnt)*100))
-    print("")
-    print("Total Number Count: {}\n".format(tot_cnt))
-    print("Count Max   : #{:<7}: {} ({:.3f}%)".format(cnt_max[0], cnt_max[1], (cnt_max[1] / tot_cnt)*100))
-    print("Count Min.  : #{:<7}: {} ({:.3f}%)".format(cnt_min[0], cnt_min[1], (cnt_min[1] / tot_cnt)*100))
-    print("Count Mean  : {:.3f} ({:.3f}%)".format(tot_cnt / 39, (1 / 39)*100))
-    print("Count Median: {:.3f} ({:.3f}%)".format(cnt_med, (cnt_med / tot_cnt)*100))
-    print("Count Mode  : {}     ({:.3f}%)".format(cnt_mode, (cnt_mode / tot_cnt)*100))
-    print("Count Stdev.: {:.3f}   ({:.3f}%)\n".format(cnt_stdev, (cnt_stdev / tot_cnt)*100))
+    if nonverbose == False:
+        print("Number: Count (% of total)")
+        for val in histogram_items:
+            print("{:^6}: {:^5} ({:^.3f}%)".format(val[0], val[1], (val[1] / tot_cnt)*100))
+        print("")
+        print("Total Number Count: {}\n".format(tot_cnt))
+        print("Count Max   : #{:<7}: {} ({:.3f}%)".format(cnt_max[0], cnt_max[1], (cnt_max[1] / tot_cnt)*100))
+        print("Count Min.  : #{:<7}: {} ({:.3f}%)".format(cnt_min[0], cnt_min[1], (cnt_min[1] / tot_cnt)*100))
+        print("Count Mean  : {:.3f} ({:.3f}%)".format(tot_cnt / 39, (1 / 39)*100))
+        print("Count Median: {:.3f} ({:.3f}%)".format(cnt_med, (cnt_med / tot_cnt)*100))
+        print("Count Mode  : {}     ({:.3f}%)".format(cnt_mode, (cnt_mode / tot_cnt)*100))
+        print("Count Stdev.: {:.3f}   ({:.3f}%)\n".format(cnt_stdev, (cnt_stdev / tot_cnt)*100))
 
-    print("Numbers Total Sum     : {}".format(tot_sum))
-    print("Numbers Total Sum Mean: {:.3f}\n".format(tot_sum / tot_cnt))
+        print("Numbers Total Sum     : {}".format(tot_sum))
+        print("Numbers Total Sum Mean: {:.3f}\n".format(tot_sum / tot_cnt))
 
     mean_daily_means = mean(daily_means)
     stdev_daily_means = pstdev(daily_means)
     daily_means_rounded = [*map(lambda x: round(x, 2), daily_means)]
     mode_daily_means_rounded = my_mode(daily_means_rounded)
-    print_stats_list("Numbers Daily Mean", daily_means, mean_daily_means,
-                      mode_daily_means_rounded, stdev_daily_means, daily_means_rounded)
+    if nonverbose == False:
+        print_stats_list("Numbers Daily Mean", daily_means, mean_daily_means,
+                          mode_daily_means_rounded, stdev_daily_means, daily_means_rounded)
 
     mean_daily_stdevs = mean(daily_stdevs)
     stdev_daily_stdevs = pstdev(daily_stdevs)
     daily_stdevs_rounded = [*map(lambda x: round(x, 2), daily_stdevs)]
     mode_daily_stdevs_rounded = my_mode(daily_stdevs_rounded)
-    print_stats_list("Numbers Daily Stdev.", daily_stdevs, mean_daily_stdevs,
-                      mode_daily_stdevs_rounded, stdev_daily_stdevs, daily_stdevs_rounded)
+    if nonverbose == False:
+        print_stats_list("Numbers Daily Stdev.", daily_stdevs, mean_daily_stdevs,
+                          mode_daily_stdevs_rounded, stdev_daily_stdevs, daily_stdevs_rounded)
 
     daily_sums_means = [*map(lambda x: (x/5), daily_sums)]
     daily_sums_rounded_means = [*map(lambda x: round(x, 2), daily_sums_means)]
-    print_stats_list("Numbers Daily Sum", daily_sums, mean(daily_sums),
-                      my_mode(daily_sums_rounded_means), pstdev(daily_sums_means), daily_sums_rounded_means)
+    if nonverbose == False:
+        print_stats_list("Numbers Daily Sum", daily_sums, mean(daily_sums),
+                          my_mode(daily_sums_rounded_means), pstdev(daily_sums_means), daily_sums_rounded_means)
 
     mean_daily_cnt_mean = mean(daily_count_means)
     stdev_daily_cnt_mean = pstdev(daily_count_means)
     median_daily_cnt_mean = median(daily_count_means)
     daily_count_means_rounded = [*map(lambda x: round(x, 2), daily_count_means)]
     mode_daily_cnt_mean_rounded = my_mode(daily_count_means_rounded)
-    print_stats_list("Numbers Count Mean", daily_count_means, mean_daily_cnt_mean,
-                      mode_daily_cnt_mean_rounded, stdev_daily_cnt_mean, daily_count_means_rounded)
+    if nonverbose == False:
+        print_stats_list("Numbers Count Mean", daily_count_means, mean_daily_cnt_mean,
+                          mode_daily_cnt_mean_rounded, stdev_daily_cnt_mean, daily_count_means_rounded)
 
     mean_daily_cnt_stdev = mean(daily_count_stdevs)
     stdev_daily_cnt_stdev = pstdev(daily_count_stdevs)
     median_daily_cnt_stdev = median(daily_count_stdevs)
     daily_count_stdevs_rounded = [*map(lambda x: round(x, 2), daily_count_stdevs)]
     mode_daily_cnt_stdev_rounded = my_mode(daily_count_stdevs_rounded)
-    print_stats_list("Numbers Count Stdev.", daily_count_stdevs, mean_daily_cnt_stdev,
-                      mode_daily_cnt_stdev_rounded, stdev_daily_cnt_stdev, daily_count_stdevs_rounded)
+    if nonverbose == False:
+        print_stats_list("Numbers Count Stdev.", daily_count_stdevs, mean_daily_cnt_stdev,
+                          mode_daily_cnt_stdev_rounded, stdev_daily_cnt_stdev, daily_count_stdevs_rounded)
 
-    print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
-    for num in current_numbers:
-        print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
+    if nonverbose == False:
+        print("Last Winning Numbers: {}".format(" ".join(current_numbers)))
+        for num in current_numbers:
+            print("{:>2}: {} ({:.3f}%)".format(num, histogram_dict[num], (histogram_dict[num] / tot_cnt)*100))
 
     current_numbers_int = [*map(int, current_numbers)]
     current_numbers_freqs = [*map(lambda x: histogram_dict[x], current_numbers)]
@@ -186,10 +198,11 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     current_num_stdev = pstdev(current_numbers_int)
     current_num_cnt_mean = mean(current_numbers_freqs)
     current_num_cnt_stdev = pstdev(current_numbers_freqs)
-    print("\nLast Winning Numbers Day Sum        : {}".format(current_num_sum))
-    print("Last Winning Numbers Day Mean       : {:.3f}".format(current_num_mean))
-    print("Last Winning Numbers Day Stdev.     : {:.3f}".format(current_num_stdev))
-    print("Last Winning Numbers Day Count Mean.: {:.3f}".format(current_num_cnt_mean))
+    if nonverbose == False:
+        print("\nLast Winning Numbers Day Sum        : {}".format(current_num_sum))
+        print("Last Winning Numbers Day Mean       : {:.3f}".format(current_num_mean))
+        print("Last Winning Numbers Day Stdev.     : {:.3f}".format(current_num_stdev))
+        print("Last Winning Numbers Day Count Mean.: {:.3f}".format(current_num_cnt_mean))
 
     if GENERATE_NUMS == True:
         print("Enter your 5 numbers")
@@ -198,12 +211,12 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
             if user_in == "quit":
                 return
             to_skip = [*map(int, re.findall(r"\d+", user_in))]
-            
+
             user_in = input("Use > ")
             if user_in == "quit":
                 return
             to_use = [*map(int, re.findall(r"\d+", user_in))]
-            
+
             if any(i in to_skip for i in to_use):
                 print("Invalid, duplicates")
                 continue
@@ -224,31 +237,26 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
                 freqs_nums = [*map(lambda x: histogram_dict[x], [*map(str, nums)])]
                 mean_freq_nums = mean(freqs_nums)
                 stdev_freq_nums = pstdev(freqs_nums)
-                t_1 = False
-                t_2 = False
-                t_3 = False
-                t_4 = False
 
                 sd = stdev_daily_stdevs * F5_STDEV
-                if stdev_nums < mean_daily_stdevs + sd and\
-                   stdev_nums > mean_daily_stdevs - sd:
-                    t_1 = True
+                if (stdev_nums < mean_daily_stdevs + sd and\
+                   stdev_nums > mean_daily_stdevs - sd) == False:
+                    continue
                 sd = stdev_daily_means * F5_STDEV
-                if mean_nums < mean_daily_means + sd and\
-                   mean_nums > mean_daily_means - sd:
-                    t_2 = True
+                if (mean_nums < mean_daily_means + sd and\
+                   mean_nums > mean_daily_means - sd) == False:
+                    continue
                 sd = stdev_daily_cnt_mean * F5_STDEV
-                if mean_freq_nums < mean_daily_cnt_mean + sd and\
-                   mean_freq_nums > mean_daily_cnt_mean - sd:
-                    t_3 = True
+                if (mean_freq_nums < mean_daily_cnt_mean + sd and\
+                   mean_freq_nums > mean_daily_cnt_mean - sd) == False:
+                    continue
                 sd = stdev_daily_cnt_stdev * F5_STDEV
-                if stdev_freq_nums < mean_daily_cnt_stdev + sd and\
-                   stdev_freq_nums > mean_daily_cnt_stdev - sd:
-                    t_4 = True
+                if (stdev_freq_nums < mean_daily_cnt_stdev + sd and\
+                   stdev_freq_nums > mean_daily_cnt_stdev - sd) == False:
+                    continue
 
-                if t_1 and t_2 and t_3 and t_4:
-                    print(nums)
-                    break
+                print(nums)
+                break
             # print("1: {}\n2: {}\n3: {}\n4: {}".format(t_1, t_2, t_3, t_4))
 
     # Figure 0
@@ -303,26 +311,16 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
         freqs_line = [*map(lambda x: histogram_dict[x], [*map(str, line)])]
         mean_freq_line = mean(freqs_line)
         stdev_freq_line = pstdev(freqs_line)
-        t_1 = False
-        t_2 = False
-        t_3 = False
-        t_4 = False
+
         sd = stdev_daily_stdevs * F5_STDEV
-        if stdev_line < mean_daily_stdevs + sd and\
-           stdev_line > mean_daily_stdevs - sd:
-            t_1 = True
+        t_1 = stdev_line < mean_daily_stdevs + sd and stdev_line > mean_daily_stdevs - sd
         sd = stdev_daily_means * F5_STDEV
-        if mean_line < mean_daily_means + sd and\
-           mean_line > mean_daily_means - sd:
-            t_2 = True
+        t_2 = mean_line < mean_daily_means + sd and mean_line > mean_daily_means - sd
         sd = stdev_daily_cnt_mean * F5_STDEV
-        if mean_freq_line < mean_daily_cnt_mean + sd and\
-           mean_freq_line > mean_daily_cnt_mean - sd:
-            t_3 = True
+        t_3 = mean_freq_line < mean_daily_cnt_mean + sd and mean_freq_line > mean_daily_cnt_mean - sd
         sd = stdev_daily_cnt_stdev * F5_STDEV
-        if stdev_freq_line < mean_daily_cnt_stdev + sd and\
-           stdev_freq_line > mean_daily_cnt_stdev - sd:
-            t_4 = True
+        t_4 = stdev_freq_line < mean_daily_cnt_stdev + sd and stdev_freq_line > mean_daily_cnt_stdev - sd
+
         if check_cond(t_1, t_2, t_3, t_4, True, False, False, False):
             in_stdev["1"] += 1
         elif check_cond(t_1, t_2, t_3, t_4, False, True, False, False):
@@ -364,14 +362,10 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     plt.plot([], [], " ", label="0: None")
     plt.legend(loc=0, handlelength=0, handletextpad=0, fontsize="small")
     plt.bar(list(in_stdev.keys()), in_stdev.values(), edgecolor="black")
+    print('\033[A\033[K', end='')
     print("Showing plots...")
 
     plt.show()
-
-def check_cond(t1, t2, t3, t4, cond1, cond2, cond3, cond4):
-    if t1 == cond1 and t2 == cond2 and t3 == cond3 and t4 == cond4:
-        return True
-    return False
 
 #### MAIN ####
 def main():
@@ -379,20 +373,28 @@ def main():
 
     print("--------------------------\n{:^26}\n--------------------------".format("Fantasy 5 | " + CURRENT_DATE))
 
-    print("Fetching...")
-    # Get txt file
-    lotto_file = get_fantasy5_file()
+    if args.uselocal == False:
+        print("Fetching...")
+        # Get txt file
+        lotto_file = get_fantasy5_file()
+        if args.savefile == True:
+            with open('fantasy5results.txt', 'wb') as out:
+                out.write(lotto_file.encode())
+        print('\033[A\033[K', end='')
+    else:
+        with open('fantasy5results.txt', 'r') as local_lotto_file:
+            lotto_file = local_lotto_file.read()
     lines = lotto_file.split('\n')
 
     print("Parsing...")
     # Extract numbers from txt file to build histogram & save raw_numbers file
-    raw_numbers = None
     if args.nosave == False:
-        raw_numbers = open(args.filename[0], 'w')
+        raw_numbers = open('f5raw_numbers.txt', 'w')
     histogram = build_histogram_and_write_to_file(lines[5:], raw_numbers)
+    print('\033[A\033[K', end='')
     if args.nosave == False:
         raw_numbers.close()
-        print("Saved: {}".format(args.filename[0]))
+        print("Saved: {}".format('f5raw_numbers.txt'))
 
     # Get computed values
     tot_sum = histogram.pop("sum", None)
@@ -419,9 +421,10 @@ def main():
     for val in sorted_hist:
         tot += val[1]
 
-    print("Printing...")
-    print_stats(sorted_hist, histogram, hist_ascend, tot, tot_sum, daily_sums, daily_means,
-                daily_stdevs, daily_count_means, daily_count_stdevs, [*map(str, all_lines[0])], all_lines)
+    print("Loading output...")
+    print_stats(sorted_hist, histogram, hist_ascend, tot, tot_sum, daily_sums, daily_means, daily_stdevs,
+                daily_count_means, daily_count_stdevs, [*map(str, all_lines[0])], all_lines, args.nonverbose)
+    print('\033[A\033[K', end='')
 
 if __name__ == "__main__":
     main()

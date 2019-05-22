@@ -11,15 +11,15 @@ todo: more stats, matlab plots
 
 ## Example Output
 
-![Standard Deviations](stdevs.png "Standard Deviations")
+![Standard Deviations](imgs/stdevs.png "Standard Deviations")
 
-![Means](means.png "Means")
+![Means](imgs/means.png "Means")
 
-![Frequencies](frequencies.png "Frequencies")
+![Frequencies](imgs/frequencies.png "Frequencies")
 
-![Frequency Stdevs](frequencies_stdevs.png "Frequencies Stdevs.")
+![Frequency Stdevs](imgs/frequencies_stdevs.png "Frequencies Stdevs.")
 
-![Conditions](conditions.png "Conditions")
+![Conditions](imgs/conditions.png "Conditions")
 
-![Counts](counts.png "Counts")
+![Counts](imgs/counts.png "Counts")
 

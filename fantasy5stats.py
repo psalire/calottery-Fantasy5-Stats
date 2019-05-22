@@ -287,22 +287,7 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     print("Loading...")
     # Figure 5
     plt.figure(5)
-    in_stdev = {}
-    in_stdev["1"] = 0
-    in_stdev["2"] = 0
-    in_stdev["3"] = 0
-    in_stdev["4"] = 0
-    in_stdev["1,2"] = 0
-    in_stdev["1,3"] = 0
-    in_stdev["1,4"] = 0
-    in_stdev["2,3"] = 0
-    in_stdev["2,4"] = 0
-    in_stdev["1,2,3"] = 0
-    in_stdev["1,2,4"] = 0
-    in_stdev["1,3,4"] = 0
-    in_stdev["2,3,4"] = 0
-    in_stdev["1,2,3,4"] = 0
-    in_stdev["0"] = 0
+    in_stdev = [0 for i in range(16)]
     for line in all_lines:
         stdev_line = pstdev(line)
         mean_line = mean(line)
@@ -311,44 +296,17 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
         stdev_freq_line = pstdev(freqs_line)
 
         sd = stdev_daily_stdevs * F5_STDEV
-        t_1 = stdev_line < mean_daily_stdevs + sd and stdev_line > mean_daily_stdevs - sd
+        t_1 = int(stdev_line < mean_daily_stdevs + sd and stdev_line > mean_daily_stdevs - sd)
         sd = stdev_daily_means * F5_STDEV
-        t_2 = mean_line < mean_daily_means + sd and mean_line > mean_daily_means - sd
+        t_2 = int(mean_line < mean_daily_means + sd and mean_line > mean_daily_means - sd)
         sd = stdev_daily_cnt_mean * F5_STDEV
-        t_3 = mean_freq_line < mean_daily_cnt_mean + sd and mean_freq_line > mean_daily_cnt_mean - sd
+        t_3 = int(mean_freq_line < mean_daily_cnt_mean + sd and mean_freq_line > mean_daily_cnt_mean - sd)
         sd = stdev_daily_cnt_stdev * F5_STDEV
-        t_4 = stdev_freq_line < mean_daily_cnt_stdev + sd and stdev_freq_line > mean_daily_cnt_stdev - sd
+        t_4 = int(stdev_freq_line < mean_daily_cnt_stdev + sd and stdev_freq_line > mean_daily_cnt_stdev - sd)
 
-        if check_cond(t_1, t_2, t_3, t_4, True, False, False, False):
-            in_stdev["1"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, False, True, False, False):
-            in_stdev["2"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, False, False, True, False):
-            in_stdev["3"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, False, False, False, True):
-            in_stdev["4"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, True, False, False):
-            in_stdev["1,2"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, False, True, False):
-            in_stdev["1,3"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, False, False, True):
-            in_stdev["1,4"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, False, True, True, False):
-            in_stdev["2,3"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, False, True, False, True):
-            in_stdev["2,4"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, True, True, False):
-            in_stdev["1,2,3"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, True, False, True):
-            in_stdev["1,2,4"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, False, True, True):
-            in_stdev["1,3,4"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, False, True, True, True):
-            in_stdev["2,3,4"] += 1
-        elif check_cond(t_1, t_2, t_3, t_4, True, True, True, True):
-            in_stdev["1,2,3,4"] += 1
-        else:
-            in_stdev["0"] += 1
+        index = t_1 | (t_2 << 1) | (t_3 << 2) | (t_4 << 3)
+        in_stdev[index] += 1
+
     plt.suptitle("Daily Winning Numbers Within +/-{} Stdev. of Mean".format(F5_STDEV))
     plt.title(CURRENT_DATE+": ["+(",".join(current_numbers))+"]")
     plt.xlabel("Conditions")
@@ -359,7 +317,8 @@ def print_stats(histogram_items, histogram_dict, ascend_hist, tot_cnt, tot_sum, 
     plt.plot([], [], " ", label="4: Daily Freq. SD within +/-{} SD of Mean Freq. SD".format(F5_STDEV))
     plt.plot([], [], " ", label="0: None")
     plt.legend(loc=0, handlelength=0, handletextpad=0, fontsize="small")
-    plt.bar(list(in_stdev.keys()), in_stdev.values(), edgecolor="black")
+    plt.bar(["0","1","2","1,2","3","1,3","2,3","1,2,3","4","1,4","2,4","1,2,4","3,4","1,3,4","2,3,4","1,2,3,4"],
+            in_stdev, edgecolor="black")
     print('\033[A\033[K', end='')
     print("Showing plots...")
 

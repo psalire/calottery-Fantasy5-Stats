@@ -11,7 +11,7 @@ GET /api/DrawGameApi/DrawGamePastDrawResults/9/1/20 HTTP/1.1
 Host: www.calottery.com
 ```
 
-where the parameters are /Game ID#/Page#/Total
+where the parameters are ```/Game ID#/Page#/Total```
 
 Explanation:
 

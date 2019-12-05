@@ -1,5 +1,7 @@
 # Fantasy 5 Parser
 
+NOTE: calottery no longer provides the .txt file containing historical data. ```fantasy5results.txt``` provides until 09/04/2019, which can be used with ```--use-local```
+
 Parses calottery's .txt file of Fantasy5 results. Prints stats on each number. Also, saves ```raw_numbers.txt``` containing only results on each line.
 
 todo: more stats, matlab plots

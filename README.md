@@ -37,7 +37,7 @@ For example,
 
 and so on
 
-So, it is possible with a combination of API calls and combination of JSONs to get all historical data as this program requires.
+So, it is possible with a multiple API calls and combination of returned JSONs to get all historical data as this program requires.
 
 ----
 

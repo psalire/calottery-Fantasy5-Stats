@@ -1,5 +1,7 @@
 # Fantasy 5 Parser
 
+## TODO+NOTE
+
 NOTE: calottery no longer provides the .txt file containing historical data that this program uses. ```fantasy5results.txt``` provides until 09/04/2019, which can be used with ```--use-local```
 
 TODO: rewrite program to use JSON from REST API (explained below)

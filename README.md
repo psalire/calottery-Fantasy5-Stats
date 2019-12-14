@@ -6,7 +6,7 @@ NOTE: calottery no longer provides the .txt file containing historical data that
 
 TODO: rewrite program to use JSON from REST API (explained below)
 
-Poking around the site, I found that historical data can be fetched with a REST API that returns a JSON:
+Historical data on calottery.com is now fetched with a REST API that returns a JSON, but is limited per API call:
 
 ```
 GET /api/DrawGameApi/DrawGamePastDrawResults/9/1/20 HTTP/1.1

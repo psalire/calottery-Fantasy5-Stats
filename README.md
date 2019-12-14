@@ -25,19 +25,15 @@ Explanation:
 
 ```Page#/Total``` -
 
-```Total``` indicates how many draws to return. It can range from 1 to 50.
-
-```Page#``` indicates which index of ```Total``` to return.
+* ```Total``` indicates how many draws to return. It can range from 1 to 50.
+* ```Page#``` indicates which index of ```Total``` to return.
 
 For example,
 
-```1/20``` returns the 20 most recent draws, i.e. draws 1-20
-
-```2/20``` returns draws 21-40
-
-```3/20``` returns draws 41-60
-
-and so on
+* ```1/20``` returns the 20 most recent draws, i.e. draws 1-20
+* ```2/20``` returns draws 21-40
+* ```3/20``` returns draws 41-60
+* and so on
 
 So, it is possible with a multiple API calls and combination of returned JSONs to get all historical data as this program requires.
 

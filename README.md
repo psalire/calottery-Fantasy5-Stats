@@ -37,11 +37,9 @@ For example,
 
 So, it is possible with a multiple API calls and combination of returned JSONs to get all historical data as this program requires.
 
-----
+## About
 
 Parses calottery's .txt file of Fantasy5 results. Prints stats on each number. Also, saves ```raw_numbers.txt``` containing only results on each line.
-
-todo: more stats, matlab plots
 
 ```Python 3.6.8```
 
